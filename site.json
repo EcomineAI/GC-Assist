@@ -1,0 +1,190 @@
+{
+  "trusted_sites": [
+    {
+      "url": "https://gordoncollege.edu.ph/w3/",
+      "category": "about_us",
+      "keywords": ["gordon college", "gc", "home", "website", "main page", "homepage"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/board-of-trustees/",
+      "category": "about_us",
+      "keywords": ["board", "trustees", "bot", "members", "board of trustees"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/charter/",
+      "category": "about_us",
+      "keywords": ["charter", "ordinance", "legal basis", "city ordinance"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/college-hymn/",
+      "category": "about_us",
+      "keywords": ["hymn", "song", "college hymn", "gc hymn"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/college-seal/",
+      "category": "about_us",
+      "keywords": ["seal", "logo", "college seal", "symbol"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/history-of-gordon-college/",
+      "category": "about_us",
+      "keywords": ["history", "gc history", "when founded", "founded", "established", "background"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/mandate-and-function/",
+      "category": "about_us",
+      "keywords": ["mandate", "function", "mandate and function", "legal bases", "legal basis"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/organizational-chart/",
+      "category": "about_us",
+      "keywords": ["organizational chart", "org chart", "organizational structure", "structure"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/about-us/vision-mission-objectives-and-core-values/",
+      "category": "about_us",
+      "keywords": ["vision", "mission", "objectives", "core values", "vmg", "vmoc", "vision mission"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/academic-affairs/",
+      "category": "administration",
+      "keywords": ["academic affairs", "vp academic", "offices under academic", "colleges"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/administration-and-finance/",
+      "category": "administration",
+      "keywords": ["administration and finance", "finance", "hr", "admin and finance"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/ipdea/",
+      "category": "administration",
+      "keywords": ["ipdea", "planning", "development", "external affairs", "internationalization"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/office-of-student-welfare-and-services/",
+      "category": "administration",
+      "keywords": ["student welfare", "student services", "osws", "student affairs"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/office-of-the-college-president/",
+      "category": "administration",
+      "keywords": ["college president", "office of the president", "ocp", "executive"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/administration/research-development-and-community-extension-office/",
+      "category": "administration",
+      "keywords": ["research development", "community extension", "rdceo", "rdces"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/admission/continuing-students-returnees-and-cross-enrollment/",
+      "category": "admission",
+      "keywords": ["continuing students", "returnees", "cross enrollment", "cross-enroll"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/admission/freshmen-students/",
+      "category": "admission",
+      "keywords": ["freshmen", "new students", "first year", "requirements", "gcat"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/admission/igs-institute-of-graduate-studies-students/",
+      "category": "admission",
+      "keywords": ["igs", "graduate studies", "master", "graduate admission"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/admission/transferees-and-second-courser/",
+      "category": "admission",
+      "keywords": ["transferees", "second courser", "transfer students"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/academics/academic-calendar/",
+      "category": "academics",
+      "keywords": ["academic calendar", "schedule", "important dates"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/academics/academic-programs/",
+      "category": "academics",
+      "keywords": ["academic programs", "courses", "degree programs", "program list"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/academics/colleges/",
+      "category": "academics",
+      "keywords": ["colleges", "igs", "cahs", "cba", "ccs", "ceas", "chtm"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/community-extensions/",
+      "category": "research_extension",
+      "keywords": ["community extension", "extension services", "cesu", "outreach"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/research-development-and-publication/",
+      "category": "research_extension",
+      "keywords": ["research", "publication", "journals", "research development"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/campus-life/library-and-instructional-media-center/",
+      "category": "campus_life",
+      "keywords": ["library", "limc", "instructional media center", "books", "resources"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/campus-life/student-organizations/",
+      "category": "campus_life",
+      "keywords": ["student organizations", "student orgs", "councils", "clubs"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/campus-life/student-publication/",
+      "category": "campus_life",
+      "keywords": ["student publication", "the forefront", "campus paper", "student newspaper"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/campus-life/student-services/",
+      "category": "campus_life",
+      "keywords": ["student services", "osws", "services", "support"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/gcaai/",
+      "category": "alumni",
+      "keywords": ["alumni", "gcaai", "alumni association", "graduates"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/announcement-type/announcement/",
+      "category": "announcements",
+      "keywords": ["announcement", "announcements", "updates", "gcat schedule", "enrolment"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/category/community-extension/",
+      "category": "research_extension",
+      "keywords": ["community extension", "extension news", "cesu activities"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/guideline-type/guideline/",
+      "category": "guidelines",
+      "keywords": ["guidelines", "policies", "rules", "procedures"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/category/news/",
+      "category": "news",
+      "keywords": ["news", "latest news", "updates", "what's new"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/announcement-type/notice/",
+      "category": "announcements",
+      "keywords": ["notice", "notices", "suspension", "advisory"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/category/research-publication/",
+      "category": "research_extension",
+      "keywords": ["research publications", "journals", "research outputs"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/call-us/",
+      "category": "contact",
+      "keywords": ["phone", "hotline", "local", "call us", "contact number"]
+    },
+    {
+      "url": "https://gordoncollege.edu.ph/w3/email-us/",
+      "category": "contact",
+      "keywords": ["email", "email us", "contact email", "offices email"]
+    }
+  ]
+}
+
