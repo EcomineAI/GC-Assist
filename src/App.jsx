@@ -264,6 +264,8 @@ export default function App() {
     }
   }, [user, location.pathname, navigate])
 
+  const { activeProvider, activeModel } = useChat()
+  const { isDark, colorTheme } = useTheme()
   const { fontSize, hasAcceptedTerms, setHasAcceptedTerms, reducedMotion } = useSettings()
 
   useEffect(() => {
