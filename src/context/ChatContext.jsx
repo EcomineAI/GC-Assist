@@ -194,24 +194,8 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => {
-    const saved = localStorage.getItem('gcassist_active_provider')
-    // Migration: If on Vercel/Production and the saved provider is LM Studio, reset it to Groq API
-    // This fixes the issue where other devices are 'stuck' on the local provider.
-    if (saved === 'LM Studio' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('192.168')) {
-      return 'Groq API'
-    }
-    return saved || 'Groq API'
-  })
-  const [activeModel, setActiveModel] = useState(() => {
-    const saved = localStorage.getItem('gcassist_active_model')
-    const provider = localStorage.getItem('gcassist_active_provider')
-    // If we're migrating the provider, we should also reset the model
-    if (provider === 'LM Studio' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('192.168')) {
-      return 'llama-3.3-70b-versatile'
-    }
-    return saved || 'llama-3.3-70b-versatile'
-  })
+  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
+  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'llama-3.3-70b-versatile')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
 
@@ -237,7 +221,6 @@ export function ChatProvider({ children }) {
   }, [messages, sessionsHistory, sessionTokens, user])
 
   const kbSections = useRef([])
-  const resolvedServerUrl = useRef(null)
   const abortControllerRef = useRef(null)
   const embedderRef = useRef(null)
 
@@ -261,35 +244,6 @@ export function ChatProvider({ children }) {
     return () => { active = false }
   }, [])
 
-  // Load cloud config (written by cloud.py) with retry logic
-  useEffect(() => {
-    let retries = 0
-    const maxRetries = 5
-
-    const loadConfig = () => {
-      fetch('/config.json?t=' + new Date().getTime())
-        .then(res => {
-          if (!res.ok) throw new Error('Not found')
-          return res.json()
-        })
-        .then(cfg => {
-          if (cfg.lmStudioUrl) {
-            resolvedServerUrl.current = cfg.lmStudioUrl
-            console.log(`[GC Assist] Cloud LM Studio Detected: ${cfg.lmStudioUrl}`)
-          }
-        })
-        .catch(() => {
-          if (retries < maxRetries) {
-            retries++
-            console.log(`[GC Assist] Config not ready, retrying... (${retries}/${maxRetries})`)
-            setTimeout(loadConfig, 2000)
-          } else {
-            console.log('[GC Assist] Running in Local Mode (No config.json found after retries)')
-          }
-        })
-    }
-    loadConfig()
-  }, [])
 
   // Load knowledge base — try JSON (new vector format) first, fall back to old .txt
   useEffect(() => {
@@ -338,24 +292,37 @@ export function ChatProvider({ children }) {
     return `${BASE_SYSTEM_PROMPT}\n\n--- RELEVANT KNOWLEDGE BASE SECTIONS ---\n${kbText}\n--- END ---`
   }, [])
 
-  const triggerBackgroundSummary = async (apiUrl, msgsToSummarize) => {
+  const triggerBackgroundSummary = async (msgsToSummarize) => {
     const transcript = msgsToSummarize.filter(m => m.role !== 'system').map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
     try {
-      const resp = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'local-model',
-          messages: [{ role: 'user', content: `Summarize the following conversation context briefly in exactly 3 precise sentences. Retain key facts, preferences, and important context details. DO NOT add conversational flair, just output the facts.\n\n${transcript}` }],
-          temperature: 0.1,
-          max_tokens: 150,
-          stream: false
-        })
-      })
-      const data = await resp.json()
-      const summary = data.choices?.[0]?.message?.content
-      if (summary) {
-        const memoryMsg = { role: 'system', content: `[Archive Memory: ${summary}]`, id: Date.now() - 1000 }
+      const summaryPrompt = `Summarize the following conversation context briefly in exactly 3 precise sentences. Retain key facts, preferences, and important context details. DO NOT add conversational flair, just output the facts.\n\n${transcript}`
+      const groqResult = await fetchGroqChatCompletion(
+        'You are a summarization assistant.',
+        [{ role: 'user', content: summaryPrompt }],
+        new AbortController().signal,
+        0.1,
+        150
+      )
+      // Read the non-streaming response
+      const reader = groqResult.response.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let fullText = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '))
+        for (const line of lines) {
+          const msg = line.replace(/^data: /, '')
+          if (msg === '[DONE]') break
+          try {
+            const parsed = JSON.parse(msg)
+            fullText += parsed.choices[0]?.delta?.content || ''
+          } catch {}
+        }
+      }
+      if (fullText) {
+        const memoryMsg = { role: 'system', content: `[Archive Memory: ${fullText}]`, id: Date.now() - 1000 }
         setMessages(prev => {
           const newArray = prev.filter(m => !msgsToSummarize.includes(m) && !m.content.includes('[Archive Memory:'))
           return [memoryMsg, ...newArray]
@@ -443,47 +410,14 @@ export function ChatProvider({ children }) {
       }
 
       const systemPrompt = buildSystemPrompt(relevant)
-      const apiUrl = resolvedServerUrl.current
 
       abortControllerRef.current = new AbortController()
 
-      try {
-        // 1. Try Groq API first (Main Provider)
-        currentProvider = 'Groq API'
-        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-        response = groqResult.response
-        setActiveModel(groqResult.modelUsed)
-      } catch (groqError) {
-        if (groqError.name === 'AbortError') throw groqError;
-
-        console.warn('[GC Assist] Groq API failed, checking for local fallback...', groqError)
-        
-        // 2. Fallback to Local LM Studio (Only if available in this build)
-        const localModules = import.meta.glob('../services/localAi.js', { eager: true });
-        const localAi = localModules['../services/localAi.js'];
-
-        if (localAi && localAi.fetchLocalChatCompletion) {
-          console.log('[GC Assist] Falling back to local LM Studio...');
-          currentProvider = 'LM Studio'
-          const localUrl = localAi.LOCAL_SERVER_URL || apiUrl;
-          
-          response = await localAi.fetchLocalChatCompletion(
-            localUrl,
-            systemPrompt,
-            conversationHistory,
-            abortControllerRef.current.signal,
-            temperature,
-            maxTokens
-          );
-
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          setActiveModel('local-model')
-        } else {
-          // No local fallback available
-          throw groqError;
-        }
-      }
-
+      // Groq API — the only provider
+      const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
+      const response = groqResult.response
+      const currentProvider = 'Groq API'
+      setActiveModel(groqResult.modelUsed)
       setActiveProvider(currentProvider)
 
       // ─── Streaming Response Processing ───
@@ -551,7 +485,7 @@ export function ChatProvider({ children }) {
         const mFilter = messages.filter(m => m.role !== 'system')
         if (mFilter.length > 4) {
           const half = Math.floor(mFilter.length / 2)
-          triggerBackgroundSummary(apiUrl, mFilter.slice(0, half))
+          triggerBackgroundSummary(mFilter.slice(0, half))
         }
       }
 

@@ -2,8 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const SettingsContext = createContext()
 
-// Local server URL is now managed in src/services/localAi.js (ignored)
-// This prevents production builds from defaulting to localhost
 
 export function SettingsProvider({ children }) {
   const [ttsVoice, setTtsVoice] = useState(() => {
