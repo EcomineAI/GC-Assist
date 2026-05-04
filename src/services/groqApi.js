@@ -36,7 +36,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
               ...conversationHistory,
             ],
             temperature: temperature,
-            max_tokens: maxTokens,
+            max_tokens: 1500, // Hardcoded generation limit, DO NOT use UI session limit
             stream: true,
           }),
         });
