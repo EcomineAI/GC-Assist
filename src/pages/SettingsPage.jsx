@@ -213,7 +213,7 @@ export default function SettingsPage() {
         <div className="settings-group">
           <div className="settings-row" style={{ cursor: 'default' }}>
             <div className="settings-row-left">
-              <div className="settings-row-label">GC Assist v1.4.1</div>
+              <div className="settings-row-label">GC Assist v1.0.10</div>
             </div>
           </div>
           <div className="settings-row" onClick={() => setShowAuthorInfo(true)} style={{ cursor: 'pointer' }} title="Learn more about the developer">

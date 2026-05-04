@@ -2,6 +2,12 @@
 
 All notable changes to the **GC Assist** project will be documented in this file.
 
+## [v1.4.2] - 2026-05-04
+
+### Fixed & Improved
+- **Motion Optimization:** Resolved a flickering glitch that occurred during route transitions when the "Reduced Motion" setting was enabled.
+- **Header Refinement:** Updated the live header to reflect the latest system patch (v1.4.2).
+
 ## [v1.4.1] - 2026-05-04
 
 ### Added

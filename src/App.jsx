@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink, useLocation, Link, useNavigate, Navigate } from 'react-router-dom'
-import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { 
   MessageCircle, LayoutGrid, SlidersHorizontal, Zap, 
   User, LogOut, History, X, Smile, Ghost, Cat, Dog, 
@@ -168,7 +168,7 @@ function AboutSheet({ isOpen, onClose, logoPath }) {
             <div className="sheet-body" style={{ paddingBottom: '20px' }}>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <img src={logoPath} alt="GC Assist" style={{ width: '80px', height: '80px', margin: '0 auto 12px' }} />
-                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.4.1</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.4.2</h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Olongapo City's AI Campus Companion</p>
               </div>
 
@@ -235,9 +235,9 @@ function UpdatePopup({ isOpen, onClose }) {
               <div style={{ width: '60px', height: '60px', background: 'var(--color-primary-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--color-primary)' }}>
                 <Rocket size={32} />
               </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>v1.4.1 Update</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>v1.4.2 Update</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-                We've automated the campus knowledge base! The AI now refreshes every 12 hours with the latest GC news, events, and academic updates.
+                We've fixed the flickering issues when "Reduced Motion" is enabled and further optimized the automated knowledge refresh system.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button className="btn btn-primary" onClick={onClose} style={{ width: '100%' }}>Awesome!</button>
@@ -266,7 +266,7 @@ export default function App() {
 
   const { activeProvider, activeModel } = useChat()
   const { isDark, colorTheme } = useTheme()
-  const { fontSize, hasAcceptedTerms, setHasAcceptedTerms, reducedMotion } = useSettings()
+  const { hasAcceptedTerms, setHasAcceptedTerms, fontSize } = useSettings()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-font-size', fontSize)
@@ -276,16 +276,16 @@ export default function App() {
   const [showFeedbackHistory, setShowFeedbackHistory] = useState(false)
   const [showAboutSheet, setShowAboutSheet] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
-  const [showUpdatePopup, setShowUpdatePopup] = useState(false)
+  const currentVersion = '1.4.2'
+  const isReduced = reducedMotion // From useSettings
 
   // Check for updates on mount
   useEffect(() => {
     const lastVersion = localStorage.getItem('last_version')
-    const currentVersion = '1.4.1'
-    if (lastVersion !== currentVersion) {
+    if (lastVersion && lastVersion !== currentVersion) {
       setTimeout(() => setShowUpdatePopup(true), 1500)
-      localStorage.setItem('last_version', currentVersion)
     }
+    localStorage.setItem('last_version', currentVersion)
   }, [])
 
   const isGroq = activeProvider === 'Groq API'
@@ -317,8 +317,7 @@ export default function App() {
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname)
 
   return (
-    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
-      <div className="app-shell">
+    <div className="app-shell">
       <AnimatePresence>
         {!hasAcceptedTerms && !isAuthPage && (
           <TermsModal onAccept={() => setHasAcceptedTerms(true)} />
@@ -462,10 +461,10 @@ export default function App() {
           <motion.div
             key={location.pathname}
             style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-            initial={{ opacity: 0, y: 8 }}
+            initial={isReduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            exit={isReduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={isReduced ? { duration: 0.1 } : { duration: 0.25, ease: 'easeInOut' }}
           >
             <Routes location={location}>
               <Route path="/" element={<ChatPage />} />
@@ -572,6 +571,5 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
-    </MotionConfig>
   )
 }
