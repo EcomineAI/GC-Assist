@@ -194,8 +194,8 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'LM Studio')
-  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'local-model')
+  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
+  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'llama-3.3-70b-versatile')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
 
@@ -431,10 +431,19 @@ export function ChatProvider({ children }) {
 
       abortControllerRef.current = new AbortController()
 
-      let response;
-      let currentProvider = 'LM Studio';
-
       try {
+        // 1. Try Groq API first (Main Provider)
+        currentProvider = 'Groq API'
+        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
+        response = groqResult.response
+        setActiveModel(groqResult.modelUsed)
+      } catch (groqError) {
+        if (groqError.name === 'AbortError') throw groqError;
+
+        console.warn('[GC Assist] Groq API failed, falling back to local LM Studio...', groqError)
+        currentProvider = 'LM Studio'
+
+        // 2. Fallback to Local LM Studio
         response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -453,15 +462,6 @@ export function ChatProvider({ children }) {
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         setActiveModel('local-model')
-      } catch (localError) {
-        if (localError.name === 'AbortError') throw localError;
-
-        console.warn('[GC Assist] Local server failed, falling back to Groq API...', localError)
-        currentProvider = 'Groq API'
-
-        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-        response = groqResult.response
-        setActiveModel(groqResult.modelUsed)
       }
 
       setActiveProvider(currentProvider)
