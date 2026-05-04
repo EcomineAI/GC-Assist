@@ -501,6 +501,13 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const [pendingLink, setPendingLink] = useState(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   const handleLinkConfirm = () => {
     if (pendingLink) {
@@ -560,6 +567,13 @@ export default function ChatPage() {
           <img src={logoPath} alt="GC" className="top-bar-logo" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="top-bar-title">GC Assist</span>
+            <div className="top-bar-info-row" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--color-text-secondary)', fontWeight: 500, opacity: 0.8 }}>
+              <span className="version-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '1px 5px', borderRadius: '4px', scale: '0.9', transformOrigin: 'left' }}>v1.4.1</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <Clock size={10} />
+                {currentTime.toLocaleDateString([], { month: 'short', day: 'numeric' })} • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
           </div>
         </div>
         <div className="top-bar-actions">

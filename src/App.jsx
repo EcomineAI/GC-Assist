@@ -168,7 +168,7 @@ function AboutSheet({ isOpen, onClose, logoPath }) {
             <div className="sheet-body" style={{ paddingBottom: '20px' }}>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <img src={logoPath} alt="GC Assist" style={{ width: '80px', height: '80px', margin: '0 auto 12px' }} />
-                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.3.0</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.4.1</h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Olongapo City's AI Campus Companion</p>
               </div>
 
@@ -210,6 +210,49 @@ function AboutSheet({ isOpen, onClose, logoPath }) {
   )
 }
 
+function UpdatePopup({ isOpen, onClose }) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          className="overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{ zIndex: 3000 }}
+        >
+          <motion.div 
+            className="sheet update-popup"
+            onClick={e => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            style={{ maxWidth: '400px', margin: 'auto', borderRadius: '20px' }}
+          >
+            <div className="sheet-handle" />
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ width: '60px', height: '60px', background: 'var(--color-primary-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--color-primary)' }}>
+                <Rocket size={32} />
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>v1.4.1 Update</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                We've automated the campus knowledge base! The AI now refreshes every 12 hours with the latest GC news, events, and academic updates.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button className="btn btn-primary" onClick={onClose} style={{ width: '100%' }}>Awesome!</button>
+                <Link to="/changelog" className="btn btn-secondary" style={{ width: '100%', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+                  View Full Changelog
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -233,6 +276,17 @@ export default function App() {
   const [showFeedbackHistory, setShowFeedbackHistory] = useState(false)
   const [showAboutSheet, setShowAboutSheet] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false)
+
+  // Check for updates on mount
+  useEffect(() => {
+    const lastVersion = localStorage.getItem('last_version')
+    const currentVersion = '1.4.1'
+    if (lastVersion !== currentVersion) {
+      setTimeout(() => setShowUpdatePopup(true), 1500)
+      localStorage.setItem('last_version', currentVersion)
+    }
+  }, [])
 
   const isGroq = activeProvider === 'Groq API'
   const badgeLabel = isGroq ? `(${activeModel})` : '(Local)'
@@ -273,6 +327,11 @@ export default function App() {
       <FeedbackHistoryModal 
         isOpen={showFeedbackHistory} 
         onClose={() => setShowFeedbackHistory(false)} 
+      />
+
+      <UpdatePopup 
+        isOpen={showUpdatePopup} 
+        onClose={() => setShowUpdatePopup(false)} 
       />
 
       <AboutSheet 

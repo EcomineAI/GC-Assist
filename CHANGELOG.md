@@ -2,7 +2,17 @@
 
 All notable changes to the **GC Assist** project will be documented in this file.
 
-## [v1.4.0-WIP] - 2026-05-04
+## [v1.4.1] - 2026-05-04
+
+### Added
+- **Automated Knowledge Refresh:** Integrated GitHub Actions to automatically run `crawl.py` and `vectorize.js` every 12 hours, ensuring the AI is always up-to-date with college news and events.
+- **Header Info Display:** Added a dynamic date and system version display in the main chat header for better situational awareness.
+- **Update Notification:** Introduced a sleek "What's New" popup to inform users about the latest automation and UI features.
+
+### Fixed & Improved
+- **Dependency Management:** Created `requirements.txt` to standardize the Python environment for the crawler.
+
+## [v1.4.0] - 2026-05-04
 
 ### Added
 - **Premium About Sheet:** Replaced the static About page with a sleek, slide-up "Slide Tab" (Bottom Sheet) available on both mobile and desktop.
