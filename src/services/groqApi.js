@@ -1,4 +1,4 @@
-const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'llama-3.3-70b-versatile,llama-3.1-8b-instant,mixtral-8x7b-32768,gemma2-9b-it').split(',');
+const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'llama-3.3-70b-versatile,meta-llama/llama-4-scout-17b-16e-instruct,qwen/qwen3-32b,llama-3.1-8b-instant').split(',');
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
