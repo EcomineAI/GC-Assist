@@ -194,8 +194,24 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
-  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'llama-3.3-70b-versatile')
+  const [activeProvider, setActiveProvider] = useState(() => {
+    const saved = localStorage.getItem('gcassist_active_provider')
+    // Migration: If on Vercel/Production and the saved provider is LM Studio, reset it to Groq API
+    // This fixes the issue where other devices are 'stuck' on the local provider.
+    if (saved === 'LM Studio' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('192.168')) {
+      return 'Groq API'
+    }
+    return saved || 'Groq API'
+  })
+  const [activeModel, setActiveModel] = useState(() => {
+    const saved = localStorage.getItem('gcassist_active_model')
+    const provider = localStorage.getItem('gcassist_active_provider')
+    // If we're migrating the provider, we should also reset the model
+    if (provider === 'LM Studio' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('192.168')) {
+      return 'llama-3.3-70b-versatile'
+    }
+    return saved || 'llama-3.3-70b-versatile'
+  })
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
 
@@ -225,7 +241,7 @@ export function ChatProvider({ children }) {
   const abortControllerRef = useRef(null)
   const embedderRef = useRef(null)
 
-  const { serverUrl, temperature, maxTokens } = useSettings()
+  const { temperature, maxTokens } = useSettings()
 
   const tokenWarning = sessionTokens >= WARN_SESSION_TOKENS && sessionTokens < MAX_SESSION_TOKENS
   const tokenBlocked = sessionTokens >= MAX_SESSION_TOKENS
@@ -427,7 +443,7 @@ export function ChatProvider({ children }) {
       }
 
       const systemPrompt = buildSystemPrompt(relevant)
-      const apiUrl = resolvedServerUrl.current || serverUrl
+      const apiUrl = resolvedServerUrl.current
 
       abortControllerRef.current = new AbortController()
 
@@ -440,28 +456,32 @@ export function ChatProvider({ children }) {
       } catch (groqError) {
         if (groqError.name === 'AbortError') throw groqError;
 
-        console.warn('[GC Assist] Groq API failed, falling back to local LM Studio...', groqError)
-        currentProvider = 'LM Studio'
+        console.warn('[GC Assist] Groq API failed, checking for local fallback...', groqError)
+        
+        // 2. Fallback to Local LM Studio (Only if available in this build)
+        const localModules = import.meta.glob('../services/localAi.js', { eager: true });
+        const localAi = localModules['../services/localAi.js'];
 
-        // 2. Fallback to Local LM Studio
-        response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: abortControllerRef.current.signal,
-          body: JSON.stringify({
-            model: 'local-model',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              ...conversationHistory,
-            ],
-            temperature: temperature,
-            max_tokens: maxTokens,
-            stream: true,
-          }),
-        })
+        if (localAi && localAi.fetchLocalChatCompletion) {
+          console.log('[GC Assist] Falling back to local LM Studio...');
+          currentProvider = 'LM Studio'
+          const localUrl = localAi.LOCAL_SERVER_URL || apiUrl;
+          
+          response = await localAi.fetchLocalChatCompletion(
+            localUrl,
+            systemPrompt,
+            conversationHistory,
+            abortControllerRef.current.signal,
+            temperature,
+            maxTokens
+          );
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        setActiveModel('local-model')
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          setActiveModel('local-model')
+        } else {
+          // No local fallback available
+          throw groqError;
+        }
       }
 
       setActiveProvider(currentProvider)

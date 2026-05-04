@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const SettingsContext = createContext()
 
-const SERVER_URL = 'http://localhost:1234/v1/chat/completions'
+// Local server URL is now managed in src/services/localAi.js (ignored)
+// This prevents production builds from defaulting to localhost
 
 export function SettingsProvider({ children }) {
   const [ttsVoice, setTtsVoice] = useState(() => {
@@ -94,7 +95,6 @@ export function SettingsProvider({ children }) {
 
   return (
     <SettingsContext.Provider value={{
-      serverUrl: SERVER_URL,
       ttsVoice,
       setTtsVoice,
       ttsRate,
