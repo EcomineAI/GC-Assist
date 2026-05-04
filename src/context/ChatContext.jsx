@@ -194,8 +194,8 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
-  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'llama-3.3-70b-versatile')
+  const [activeProvider, setActiveProvider] = useState('Groq API')
+  const [activeModel, setActiveModel] = useState('llama-3.3-70b-versatile')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
 
@@ -272,13 +272,7 @@ export function ChatProvider({ children }) {
     localStorage.setItem('gcassist_sessions_history', JSON.stringify(sessionsHistory))
   }, [sessionsHistory])
 
-  useEffect(() => {
-    localStorage.setItem('gcassist_active_provider', activeProvider)
-  }, [activeProvider])
 
-  useEffect(() => {
-    localStorage.setItem('gcassist_active_model', activeModel)
-  }, [activeModel])
 
   // Persist Current Session
   useEffect(() => {
