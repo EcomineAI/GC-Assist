@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink, useLocation, Link, useNavigate, Navigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { 
   MessageCircle, LayoutGrid, SlidersHorizontal, Zap, 
   User, LogOut, History, X, Smile, Ghost, Cat, Dog, 
@@ -264,9 +264,7 @@ export default function App() {
     }
   }, [user, location.pathname, navigate])
 
-  const { activeProvider, activeModel } = useChat()
-  const { isDark, colorTheme } = useTheme()
-  const { hasAcceptedTerms, setHasAcceptedTerms, fontSize } = useSettings()
+  const { fontSize, hasAcceptedTerms, setHasAcceptedTerms, reducedMotion } = useSettings()
 
   useEffect(() => {
     document.documentElement.setAttribute('data-font-size', fontSize)
@@ -317,7 +315,8 @@ export default function App() {
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname)
 
   return (
-    <div className="app-shell">
+    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
+      <div className="app-shell">
       <AnimatePresence>
         {!hasAcceptedTerms && !isAuthPage && (
           <TermsModal onAccept={() => setHasAcceptedTerms(true)} />
@@ -571,5 +570,6 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   )
 }
