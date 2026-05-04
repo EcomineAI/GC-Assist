@@ -592,7 +592,7 @@ export function ChatProvider({ children }) {
       setIsLoading(false)
       setLoadingPhase('searching')
     }
-  }, [messages, serverUrl, buildSystemPrompt, tokenBlocked, sessionTokens])
+  }, [messages, buildSystemPrompt, tokenBlocked, sessionTokens])
 
   const setFeedback = useCallback((msgId, value) => {
     setMessages(prev =>
