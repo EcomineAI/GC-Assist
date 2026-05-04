@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { 
   MessageCircle, LayoutGrid, SlidersHorizontal, Zap, 
   User, LogOut, History, X, Smile, Ghost, Cat, Dog, 
-  Bird, Rocket, Star, Coffee, Moon, Sun, ChevronRight, Heart, Shield, FileText
+  Bird, Rocket, Star, Coffee, Moon, Sun, ChevronRight, Heart, Shield, FileText, Menu
 } from 'lucide-react'
 import ChatPage from './pages/ChatPage'
 import ExplorePage from './pages/ExplorePage'
@@ -26,7 +26,7 @@ const navItems = [
   { to: '/', label: 'Chat', icon: MessageCircle },
   { to: '/explore', label: 'Explore', icon: LayoutGrid },
   { to: '/settings', label: 'Settings', icon: SlidersHorizontal },
-  { to: '/changelog', label: 'Updates', icon: FileText },
+  { to: '/changelog', label: 'Updates', icon: FileText, hiddenMobile: true },
 ]
 
 const AVATARS = [
@@ -139,6 +139,77 @@ function Loader2({ className }) {
   return <Zap className={`spin ${className}`} size={24} />
 }
 
+function AboutSheet({ isOpen, onClose, logoPath }) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          className="overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{ zIndex: 2001 }}
+        >
+          <motion.div 
+            className="sheet about-sheet"
+            onClick={e => e.stopPropagation()}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          >
+            <div className="sheet-handle" />
+            <div className="sheet-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Heart size={20} color="var(--color-primary)" />
+              About GC Assist
+            </div>
+            
+            <div className="sheet-body" style={{ paddingBottom: '20px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <img src={logoPath} alt="GC Assist" style={{ width: '80px', height: '80px', margin: '0 auto 12px' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.3.0</h3>
+                <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Olongapo City's AI Campus Companion</p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: 'var(--color-primary-light)', padding: '16px', borderRadius: '12px', border: '1px solid var(--color-primary-border)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '4px' }}>Our Mission</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text)', lineHeight: '1.5' }}>
+                    To provide Gordon College students with instant, reliable access to campus information, 
+                    academic resources, and AI-powered assistance for a smarter learning experience.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>The Creator</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'var(--color-surface)', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                      <User size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 600 }}>June Vic M. Abello</div>
+                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>EcomineAI Developer</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textAlign: 'center', marginTop: '12px' }}>
+                  © 2026 GC Assist • Gordon College, Olongapo City
+                </div>
+              </div>
+            </div>
+
+            <div className="sheet-actions">
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={onClose}>Close</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -152,10 +223,16 @@ export default function App() {
 
   const { activeProvider, activeModel } = useChat()
   const { isDark, colorTheme } = useTheme()
-  const { hasAcceptedTerms, setHasAcceptedTerms } = useSettings()
+  const { hasAcceptedTerms, setHasAcceptedTerms, fontSize } = useSettings()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font-size', fontSize)
+  }, [fontSize])
 
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showFeedbackHistory, setShowFeedbackHistory] = useState(false)
+  const [showAboutSheet, setShowAboutSheet] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
 
   const isGroq = activeProvider === 'Groq API'
   const badgeLabel = isGroq ? `(${activeModel})` : '(Local)'
@@ -198,6 +275,12 @@ export default function App() {
         onClose={() => setShowFeedbackHistory(false)} 
       />
 
+      <AboutSheet 
+        isOpen={showAboutSheet} 
+        onClose={() => setShowAboutSheet(false)} 
+        logoPath={logoPath}
+      />
+
       {/* Profile Sidebar Item / Menu */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -217,6 +300,15 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+
+          {/* About Button for Sidebar */}
+          <button 
+            className={`sidebar-link ${showAboutSheet ? 'active' : ''}`}
+            onClick={() => setShowAboutSheet(true)}
+          >
+            <Heart size={20} />
+            About
+          </button>
           
           {/* Admin Panel Button (only for admin) */}
           {(user && user.email.toLowerCase() === 'admin@gmail.com') && (
@@ -334,7 +426,7 @@ export default function App() {
 
       {/* Mobile Bottom Nav */}
       <nav className="bottom-nav">
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {navItems.filter(item => !item.hiddenMobile).map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -345,20 +437,80 @@ export default function App() {
             <span>{label}</span>
           </NavLink>
         ))}
-        {user ? (
-          <button className="bottom-nav-item" onClick={() => setShowProfileMenu(true)}>
-            <div className="user-avatar-small" style={{ backgroundColor: userAvatarColor, width: 24, height: 24 }}>
-              <UserAvatarIcon size={14} color="#fff" />
-            </div>
-            <span>Profile</span>
-          </button>
-        ) : (
-          <NavLink to="/login" className="bottom-nav-item">
-            <User />
-            <span>Login</span>
-          </NavLink>
-        )}
+        
+        {/* More Button */}
+        <button 
+          className={`bottom-nav-item ${showMoreMenu ? 'active' : ''}`}
+          onClick={() => setShowMoreMenu(true)}
+        >
+          <Menu size={22} />
+          <span>More</span>
+        </button>
       </nav>
+
+      {/* More Menu (Mobile Drawer) */}
+      <AnimatePresence>
+        {showMoreMenu && (
+          <motion.div 
+            className="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowMoreMenu(false)}
+            style={{ zIndex: 1500 }}
+          >
+            <motion.div 
+              className="sheet more-menu-sheet"
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            >
+              <div className="sheet-handle" />
+              <div className="sheet-title">More Options</div>
+              
+              <div className="sheet-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Link to="/changelog" className="menu-item-link" onClick={() => setShowMoreMenu(false)}>
+                  <FileText size={20} />
+                  <span>System Updates</span>
+                  <ChevronRight size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                </Link>
+
+                <button className="menu-item-link" onClick={() => { setShowAboutSheet(true); setShowMoreMenu(false); }}>
+                  <Heart size={20} />
+                  <span>About GC Assist</span>
+                  <ChevronRight size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                </button>
+
+                <div style={{ height: '1px', background: 'var(--color-separator)', margin: '8px 0' }} />
+
+                {user ? (
+                  <>
+                    <button className="menu-item-link" onClick={() => { setShowProfileMenu(true); setShowMoreMenu(false); }}>
+                      <div className="user-avatar-small" style={{ backgroundColor: userAvatarColor, width: 24, height: 24 }}>
+                        <UserAvatarIcon size={14} color="#fff" />
+                      </div>
+                      <span>Profile & Avatars</span>
+                      <ChevronRight size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                    </button>
+                    
+                    <button className="menu-item-link logout-item" style={{ color: 'var(--color-danger)' }} onClick={() => { localStorage.removeItem('isAdmin'); signOut(); setShowMoreMenu(false); }}>
+                      <LogOut size={20} />
+                      <span>Log out</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" className="menu-item-link" onClick={() => setShowMoreMenu(false)}>
+                    <User size={20} />
+                    <span>Log in</span>
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

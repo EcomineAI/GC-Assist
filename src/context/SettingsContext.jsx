@@ -16,7 +16,7 @@ export function SettingsProvider({ children }) {
 
   const [maxTokens, setMaxTokens] = useState(() => {
     const stored = localStorage.getItem('gcassist_max_tokens')
-    return stored !== null ? parseInt(stored, 10) : 1500
+    return stored !== null ? parseInt(stored, 10) : 20000
   })
 
   const [ttsRate, setTtsRate] = useState(() => {
@@ -30,7 +30,7 @@ export function SettingsProvider({ children }) {
   })
 
   const [fontSize, setFontSize] = useState(() => {
-    return localStorage.getItem('gcassist_font_size') || 'normal'
+    return localStorage.getItem('gcassist_font_size') || 'medium'
   })
 
   const [highContrast, setHighContrast] = useState(() => {
@@ -84,6 +84,14 @@ export function SettingsProvider({ children }) {
     localStorage.setItem('gcassist_accepted_terms', hasAcceptedTerms)
   }, [hasAcceptedTerms])
 
+  const [showAdvanced, setShowAdvanced] = useState(() => {
+    return localStorage.getItem('gcassist_show_advanced') === 'true'
+  })
+
+  useEffect(() => {
+    localStorage.setItem('gcassist_show_advanced', showAdvanced)
+  }, [showAdvanced])
+
   return (
     <SettingsContext.Provider value={{
       serverUrl: SERVER_URL,
@@ -105,6 +113,8 @@ export function SettingsProvider({ children }) {
       setReducedMotion,
       hasAcceptedTerms,
       setHasAcceptedTerms,
+      showAdvanced,
+      setShowAdvanced,
     }}>
       {children}
     </SettingsContext.Provider>

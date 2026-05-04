@@ -93,8 +93,9 @@ function HistoryPanel({ isOpen, onClose, sessions, activeId, onSelect }) {
   )
 }
 
-function TokenBar({ pct, warning, blocked, tokens, max }) {
+function TokenBar({ pct, warning, blocked, tokens, max, showAdvanced }) {
   if (tokens === 0) return null
+  if (!showAdvanced && !warning && !blocked) return null
   return (
     <motion.div
       className={`token-bar-wrap ${warning ? 'token-bar-warn' : ''} ${blocked ? 'token-bar-blocked' : ''}`}
@@ -110,14 +111,16 @@ function TokenBar({ pct, warning, blocked, tokens, max }) {
           <><Zap size={13} /> {tokens.toLocaleString()} / {max.toLocaleString()} tokens used</>
         )}
       </div>
-      <div className="token-bar-track">
-        <motion.div
-          className="token-bar-fill"
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-        />
-      </div>
+      {showAdvanced && (
+        <div className="token-bar-track">
+          <motion.div
+            className="token-bar-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -481,6 +484,8 @@ export default function ChatPage() {
     sendMessage, setFeedback, startNewSession, viewHistory, resumeCurrentSession, stopGeneration
   } = useChat()
 
+  const { showAdvanced } = useSettings()
+
   const { isDark, colorTheme } = useTheme()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -552,7 +557,7 @@ export default function ChatPage() {
       {/* Top Bar */}
       <div className="top-bar" style={{ justifyContent: 'space-between' }}>
         <div className="top-bar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/logo.png" alt="GC" className="top-bar-logo" />
+          <img src={logoPath} alt="GC" className="top-bar-logo" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="top-bar-title">GC Assist</span>
           </div>
@@ -587,6 +592,7 @@ export default function ChatPage() {
           blocked={tokenBlocked}
           tokens={sessionTokens}
           max={maxSessionTokens}
+          showAdvanced={showAdvanced}
         />
       )}
 
@@ -679,7 +685,7 @@ export default function ChatPage() {
                     <div className="msg-footer">
                       <SourceBadges sources={msg.sources} onLinkClick={setPendingLink} />
                       <div className="msg-actions">
-                        {msg.tokensUsed > 0 && (
+                        {showAdvanced && msg.tokensUsed > 0 && (
                           <span className="msg-tokens">{msg.tokensUsed} tokens</span>
                         )}
                         <TTSButton text={msg.content} />
@@ -710,7 +716,7 @@ export default function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                <img src="/logo.png" alt="GC" className="message-avatar-img" />
+                <img src={logoPath} alt="GC" className="message-avatar-img" />
                 <div className="message-ai-wrap">
                   <div className="message-bubble loading-bubble">
                     <LoadingIndicator phase={loadingPhase} />
@@ -733,7 +739,7 @@ export default function ChatPage() {
           </button>
         </div>
       ) : (
-        <div className="chat-input-bar">
+        <div className={`chat-input-bar ${tokenBlocked ? 'has-limit' : ''}`}>
           {tokenBlocked && (
             <div className="token-blocked-msg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>

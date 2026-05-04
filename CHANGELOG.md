@@ -2,6 +2,34 @@
 
 All notable changes to the **GC Assist** project will be documented in this file.
 
+## [v1.4.0-WIP] - 2026-05-04
+
+### Added
+- **Premium About Sheet:** Replaced the static About page with a sleek, slide-up "Slide Tab" (Bottom Sheet) available on both mobile and desktop.
+- **"More" Navigation Menu:** Introduced a compact hamburger menu on mobile to house secondary links (Updates, About), keeping the main navigation focused on Chat, Explore, and Settings.
+- **Advanced Mode:** Added a "Nerd Stuff" toggle in settings to hide technical data like token counts and model names for a cleaner experience.
+- **Theme-Aware Logos:** The GC logo now dynamically switches colors to match the active theme (Green, Blue, or Dark Mode) across the entire app.
+- **3-Stop Font Size Slider:** Replaced the font toggle with a precision slider for Small, Medium, and Large text scaling.
+- **Token Limit Expansion:** Increased the maximum session token limit to **20,000 (20k)** for significantly longer conversation context.
+
+### UI/UX Refinements
+- **Compact Mobile Interface:** Scaled down headings, icons, and logo dimensions for better information density on small screens.
+- **"Floating" Chat Input:** The mobile chatbox now features a transparent background that becomes solid only when session limits are reached, maximizing readability and aesthetic appeal.
+- **Refined Bottom Nav:** Reduced the height of the bottom navigation bar to 56px to reclaim vertical screen space.
+- **Advanced Control Relocation:** Moved technical settings like AI Temperature and detailed model identifiers into the new Advanced section.
+
+- **High-Concurrency Support:** Implemented a "Smart Retry" mechanism for the Groq API. The app now detects rate limits (429) and automatically retries requests with a randomized delay to handle multiple students chatting at once.
+- **Dynamic Load Balancing:** Expanded the AI model pool to include Llama 3.3, Llama 3.1, Mixtral, and Gemma. The system now automatically rotates between these models if one becomes congested or hit by limits.
+- **SPA Routing Fix:** Added `vercel.json` to ensure smooth navigation and prevent "404 Not Found" errors when refreshing the page on Vercel.
+- **Onboarding Polish:** The Terms & Conditions modal is now suppressed on Login, Signup, and Password Reset pages to provide a friction-less entry for new users.
+
+### Fixed & Improved
+- **Staggered Background Retries:** Added randomized "jitter" to API retries, preventing multiple devices from "clashing" when hitting the server at the same time.
+- **Case-Insensitive Admin Auth:** Fixed an issue where "Admin@gmail.com" was not recognized if entered in lowercase; the system now handles all email casing correctly.
+
+---
+
+
 ## [v1.3.0] - 2026-05-03
 
 ### Added

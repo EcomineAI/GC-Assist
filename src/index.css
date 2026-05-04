@@ -49,7 +49,7 @@
   --sidebar-width: 260px;
 
   /* — Bottom nav — */
-  --bottomnav-height: 64px;
+  --bottomnav-height: 56px;
 
   /* — Z-indices — */
   --z-nav: 100;
@@ -93,11 +93,26 @@
 }
 
 /* — Accessibility: Font Size — */
-[data-font-size="large"] {
-  font-size: 115% !important; /* Scale base font */
+[data-font-size="small"] {
+  font-size: 92% !important;
 }
 
-[data-font-size="large"] .message-bubble,
+[data-font-size="medium"] {
+  font-size: 100% !important;
+}
+
+[data-font-size="large"] {
+  font-size: 112% !important; /* Scale base font */
+}
+[data-font-size="small"] .sidebar-link,
+[data-font-size="small"] .settings-row-label,
+[data-font-size="small"] .top-bar-title,
+[data-font-size="small"] .chat-hero-title,
+[data-font-size="small"] .chat-hero-subtitle,
+[data-font-size="small"] .sidebar-footer {
+  font-size: 0.88em !important;
+}
+
 [data-font-size="large"] .sidebar-link,
 [data-font-size="large"] .settings-row-label,
 [data-font-size="large"] .top-bar-title,
@@ -105,6 +120,11 @@
 [data-font-size="large"] .chat-hero-subtitle,
 [data-font-size="large"] .sidebar-footer {
   font-size: 1.15em !important; /* Relative increase for components using px */
+}
+
+[data-font-size="small"] .message-bubble {
+  font-size: 0.9em !important;
+  line-height: 1.4;
 }
 
 [data-font-size="large"] .message-bubble {
@@ -378,18 +398,18 @@ img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
+  gap: 2px;
+  padding: 6px 12px;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   transition: color var(--transition-base);
   position: relative;
 }
 
 .bottom-nav-item svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   transition: all var(--transition-base);
 }
 
@@ -487,13 +507,13 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-6) var(--space-3);
+  padding: var(--space-4) var(--space-3);
   text-align: center;
 }
 
 .chat-hero-logo {
-  width: 100px;
-  height: 100px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   margin-bottom: var(--space-3);
   animation: heroFloat 3s ease-in-out infinite;
@@ -505,7 +525,7 @@ img {
 }
 
 .chat-hero-heading {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--color-text);
@@ -520,7 +540,7 @@ img {
 }
 
 .chat-hero-sub {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   margin-top: var(--space-2);
 }
@@ -539,7 +559,7 @@ img {
   border-radius: var(--radius-pill);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text);
   cursor: pointer;
@@ -1085,11 +1105,16 @@ img {
 .chat-input-bar {
   position: sticky;
   bottom: var(--bottomnav-height);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-separator);
+  padding: 8px var(--space-3);
+  background: transparent;
+  border-top: none;
   transition: background var(--transition-slow), border-color var(--transition-slow);
   z-index: 50;
+}
+
+.chat-input-bar.has-limit {
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-separator);
 }
 
 @media (min-width: 768px) {
@@ -1099,7 +1124,8 @@ img {
     max-width: 720px;
     margin: 0 auto;
     width: 100%;
-    border-top: none;
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-separator);
   }
 }
 
@@ -1110,7 +1136,7 @@ img {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-pill);
-  padding: 6px 6px 6px 20px;
+  padding: 4px 4px 4px 16px;
   transition: all var(--transition-base);
 }
 
@@ -1121,8 +1147,8 @@ img {
 
 .chat-input {
   flex: 1;
-  height: 40px;
-  font-size: 15px;
+  height: 34px;
+  font-size: 14px;
   background: transparent;
   color: var(--color-text);
 }
@@ -1133,8 +1159,8 @@ img {
 }
 
 .chat-send-btn {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--color-primary);
   color: #fff;
@@ -1507,7 +1533,7 @@ img {
   max-height: 80vh;
   width: 100%;
   overflow-y: auto;
-  padding: var(--space-3);
+  padding: 20px;
   position: relative;
 }
 
@@ -1534,7 +1560,7 @@ img {
 }
 
 .sheet-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-2);
@@ -2174,4 +2200,52 @@ img {
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-primary);
+}
+
+/* ============================================================
+   More Menu & About Sheet (New)
+   ============================================================ */
+.menu-item-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-base);
+  width: 100%;
+  text-align: left;
+}
+
+.menu-item-link:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+.menu-item-link svg {
+  color: var(--color-primary);
+}
+
+.menu-item-link.logout-item svg {
+  color: var(--color-danger);
+}
+
+.more-menu-sheet .sheet-title {
+  margin-bottom: 16px;
+  font-size: 17px;
+}
+
+.about-sheet {
+  max-width: 500px;
+}
+
+@media (max-width: 767px) {
+  .about-sheet {
+    max-height: 85vh;
+  }
 }

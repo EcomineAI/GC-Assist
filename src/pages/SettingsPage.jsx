@@ -9,13 +9,14 @@ import Tooltip from '../components/Tooltip'
 export default function SettingsPage() {
   const { isDark, toggleTheme, colorTheme, setColorTheme } = useTheme()
   const { clearMessages, activeProvider, activeModel } = useChat()
-  const { 
+    const { 
     ttsVoice, setTtsVoice, 
     ttsRate, setTtsRate, 
     ttsPitch, setTtsPitch,
     fontSize, setFontSize,
     highContrast, setHighContrast,
-    reducedMotion, setReducedMotion
+    reducedMotion, setReducedMotion,
+    showAdvanced, setShowAdvanced
   } = useSettings()
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -94,22 +95,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* — AI Model — */}
-      <div className="settings-section">
-        <div className="settings-section-title">AI Model</div>
-        <div className="settings-group">
-          <Tooltip text="Current AI intelligence provider" position="bottom" fullWidth={true}>
-            <div className="settings-row" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-row-label">Language Model</div>
-                <div className="settings-row-sublabel">
-                  {activeProvider === 'Groq API' ? `(${activeModel})` : '(Local)'}
-                </div>
-              </div>
-            </div>
-          </Tooltip>
-        </div>
-      </div>
 
       {/* — Voice Assistant — */}
       <div className="settings-section">
@@ -170,13 +155,29 @@ export default function SettingsPage() {
       <div className="settings-section">
         <div className="settings-section-title">Accessibility</div>
         <div className="settings-group">
-          <div className="settings-row" onClick={() => setFontSize(fontSize === 'normal' ? 'large' : 'normal')} style={{ cursor: 'pointer' }} title="Increase text size for better readability">
-            <div className="settings-row-left">
+          <div className="settings-row" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'flex-start', gap: '12px', padding: '16px' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="settings-row-label">Text Size</div>
-              <div className="settings-row-sublabel">Switch to larger text</div>
+              <div style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600, textTransform: 'capitalize' }}>
+                {fontSize}
+              </div>
             </div>
-            <div className="settings-row-right">
-              <div style={{ fontSize: '14px', color: 'var(--color-primary)', fontWeight: 600, textTransform: 'capitalize' }}>{fontSize}</div>
+            <input 
+              type="range" 
+              min="0" 
+              max="2" 
+              step="1" 
+              value={['small', 'medium', 'large'].indexOf(fontSize)} 
+              onChange={(e) => {
+                const options = ['small', 'medium', 'large']
+                setFontSize(options[parseInt(e.target.value)])
+              }}
+              style={{ width: '100%', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+            />
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', marginTop: '-4px' }}>
+              <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)' }}>Small</span>
+              <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)' }}>Medium</span>
+              <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)' }}>Large</span>
             </div>
           </div>
 
@@ -253,14 +254,42 @@ export default function SettingsPage() {
               </div>
             </div>
           </Tooltip>
-          <Tooltip text="Reset all settings to factory defaults" position="top" fullWidth={true}>
-            <div className="settings-row" onClick={() => { localStorage.clear(); window.location.reload(); }}>
+        </div>
+      </div>
+
+      {/* — Advanced — */}
+      <div className="settings-section">
+        <div className="settings-section-title">Advanced</div>
+        <div className="settings-group">
+          <Tooltip text="Show technical details like token counts and model names" position="bottom" fullWidth={true}>
+            <div className="settings-row" onClick={() => setShowAdvanced(!showAdvanced)}>
               <div className="settings-row-left">
-                <div className="settings-row-label">Reset All Settings</div>
-                <div className="settings-row-sublabel">Wipe cache and restore defaults</div>
+                <div className="settings-row-label">Advanced Mode</div>
+                <div className="settings-row-sublabel">Show technical stats & token counts</div>
+              </div>
+              <div className="settings-row-right">
+                <button
+                  className={`toggle ${showAdvanced ? 'active' : ''}`}
+                  aria-label="Toggle advanced mode"
+                >
+                  <div className="toggle-knob" />
+                </button>
               </div>
             </div>
           </Tooltip>
+
+          {showAdvanced && (
+            <>
+              <div className="settings-row" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-row-label">Language Model</div>
+                  <div className="settings-row-sublabel">
+                    {activeProvider === 'Groq API' ? `(${activeModel})` : '(Local)'}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

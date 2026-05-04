@@ -36,8 +36,8 @@ CONCLUSION RULE: Every response MUST end with a short 1-sentence conclusion or c
 
 // ─── Constants ────────────────────────────────────────────────
 const MAX_KB_CHARS = 12000
-const MAX_SESSION_TOKENS = 8000   // warn + block before LM Studio chokes
-const WARN_SESSION_TOKENS = 6500  // show warning at this threshold
+const MAX_SESSION_TOKENS = 20000   // warn + block before LM Studio chokes
+const WARN_SESSION_TOKENS = 16000  // show warning at this threshold
 
 // ─── Helpers ──────────────────────────────────────────────────
 function countTokens(text) {
