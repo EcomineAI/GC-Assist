@@ -198,6 +198,7 @@ export function ChatProvider({ children }) {
   const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'local-model')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
+  const [kbTimestamp, setKbTimestamp] = useState(null)
 
   // 1. Load User Specific History on Login/Mount
   useEffect(() => {
@@ -275,7 +276,7 @@ export function ChatProvider({ children }) {
     loadConfig()
   }, [])
 
-  // Load knowledge base — try JSON (new vector format) first, fall back to old .txt
+  // Load knowledge base & metadata
   useEffect(() => {
     fetch('/knowledge_base.json?t=' + new Date().getTime())
       .then(res => { if (!res.ok) throw new Error(); return res.json() })
@@ -295,6 +296,17 @@ export function ChatProvider({ children }) {
           })
           .catch(() => console.warn('[GC Assist] No knowledge base found — run python crawl.py'))
       })
+
+    // Load KB metadata/report for timestamp
+    fetch('/crawl_report.json?t=' + new Date().getTime())
+      .then(res => { if (!res.ok) throw new Error(); return res.json() })
+      .then(data => {
+        if (data.crawled_at) {
+          setKbTimestamp(new Date(data.crawled_at))
+          console.log('[GC Assist] KB metadata loaded. Last updated:', data.crawled_at)
+        }
+      })
+      .catch(() => console.log('[GC Assist] No crawl_report.json found.'))
   }, [])
 
   // Persist History & Provider State
@@ -636,6 +648,7 @@ export function ChatProvider({ children }) {
       tokenBlocked,
       sessionsHistory,
       viewingHistoryId,
+      kbTimestamp,
       sendMessage,
       setFeedback,
       clearMessages,

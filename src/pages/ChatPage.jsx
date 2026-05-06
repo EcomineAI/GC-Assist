@@ -480,7 +480,7 @@ export default function ChatPage() {
   const {
     messages, isLoading, loadingPhase, activeProvider, activeModel,
     sessionTokens, maxSessionTokens, tokenPct, tokenWarning, tokenBlocked,
-    sessionsHistory, viewingHistoryId,
+    sessionsHistory, viewingHistoryId, kbTimestamp,
     sendMessage, setFeedback, startNewSession, viewHistory, resumeCurrentSession, stopGeneration
   } = useChat()
 
@@ -569,9 +569,9 @@ export default function ChatPage() {
             <span className="top-bar-title">GC Assist</span>
             <div className="top-bar-info-row" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--color-text-secondary)', fontWeight: 500, opacity: 0.8 }}>
               <span className="version-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '1px 5px', borderRadius: '4px', scale: '0.9', transformOrigin: 'left' }}>v1.41.1</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }} title="Knowledge Base last updated">
                 <Clock size={10} />
-                {currentTime.toLocaleDateString([], { month: 'short', day: 'numeric' })} • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {(kbTimestamp || currentTime).toLocaleDateString([], { month: 'short', day: 'numeric' })} • {(kbTimestamp || currentTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>

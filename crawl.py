@@ -30,7 +30,7 @@ except ImportError:
 SITE_JSON       = Path(__file__).parent / "site.json"
 OUTPUT_DIR      = Path(__file__).parent / "public"
 CACHE_FILE      = Path(__file__).parent / "crawl_cache.json"
-REPORT_FILE     = Path(__file__).parent / "crawl_report.json"
+REPORT_FILE     = OUTPUT_DIR / "crawl_report.json"
 MANUAL_DATA     = Path(__file__).parent / "manual_data.json"
 RAW_KB_JSON     = OUTPUT_DIR / "knowledge_base_raw.json"
 TXT_KB_FILE     = OUTPUT_DIR / "knowledge_base.txt"

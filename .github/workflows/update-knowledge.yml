@@ -41,6 +41,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/knowledge_base_raw.json public/knowledge_base.json public/knowledge_base.txt crawl_cache.json crawl_report.json
+          git add public/knowledge_base_raw.json public/knowledge_base.json public/knowledge_base.txt public/crawl_report.json crawl_cache.json
           git commit -m "chore: automated knowledge base update [skip ci]" || echo "No changes to commit"
           git push
