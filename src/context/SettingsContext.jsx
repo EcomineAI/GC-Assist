@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const SettingsContext = createContext()
 
+const SERVER_URL = 'http://localhost:1234/v1/chat/completions'
 
 export function SettingsProvider({ children }) {
   const [ttsVoice, setTtsVoice] = useState(() => {
@@ -15,7 +16,7 @@ export function SettingsProvider({ children }) {
 
   const [maxTokens, setMaxTokens] = useState(() => {
     const stored = localStorage.getItem('gcassist_max_tokens')
-    return stored !== null ? parseInt(stored, 10) : 10000
+    return stored !== null ? parseInt(stored, 10) : 20000
   })
 
   const [ttsRate, setTtsRate] = useState(() => {
@@ -93,6 +94,7 @@ export function SettingsProvider({ children }) {
 
   return (
     <SettingsContext.Provider value={{
+      serverUrl: SERVER_URL,
       ttsVoice,
       setTtsVoice,
       ttsRate,

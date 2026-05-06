@@ -27,6 +27,3 @@ dist-ssr
 .env
 .env.local
 .env.*.local
-
-# Local AI service (LM Studio — dev machine only)
-src/services/localAi.js

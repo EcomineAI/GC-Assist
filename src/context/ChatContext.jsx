@@ -35,9 +35,9 @@ KNOWLEDGE BASE USAGE: Use the knowledge base provided below. Always prefer infor
 CONCLUSION RULE: Every response MUST end with a short 1-sentence conclusion or closing remark (e.g. "For more details, visit the official GC website or contact the relevant office."). This ensures the response never feels cut off.`
 
 // ─── Constants ────────────────────────────────────────────────
-const MAX_KB_CHARS = 10000
-const MAX_SESSION_TOKENS = 10000   // warn + block
-const WARN_SESSION_TOKENS = 8000   // show warning at this threshold
+const MAX_KB_CHARS = 12000
+const MAX_SESSION_TOKENS = 20000   // warn + block before LM Studio chokes
+const WARN_SESSION_TOKENS = 16000  // show warning at this threshold
 
 // ─── Helpers ──────────────────────────────────────────────────
 function countTokens(text) {
@@ -194,8 +194,8 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState('Groq API')
-  const [activeModel, setActiveModel] = useState('llama-3.3-70b-versatile')
+  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'LM Studio')
+  const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'local-model')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
 
@@ -221,10 +221,11 @@ export function ChatProvider({ children }) {
   }, [messages, sessionsHistory, sessionTokens, user])
 
   const kbSections = useRef([])
+  const resolvedServerUrl = useRef(null)
   const abortControllerRef = useRef(null)
   const embedderRef = useRef(null)
 
-  const { temperature, maxTokens } = useSettings()
+  const { serverUrl, temperature, maxTokens } = useSettings()
 
   const tokenWarning = sessionTokens >= WARN_SESSION_TOKENS && sessionTokens < MAX_SESSION_TOKENS
   const tokenBlocked = sessionTokens >= MAX_SESSION_TOKENS
@@ -244,6 +245,35 @@ export function ChatProvider({ children }) {
     return () => { active = false }
   }, [])
 
+  // Load cloud config (written by cloud.py) with retry logic
+  useEffect(() => {
+    let retries = 0
+    const maxRetries = 5
+
+    const loadConfig = () => {
+      fetch('/config.json?t=' + new Date().getTime())
+        .then(res => {
+          if (!res.ok) throw new Error('Not found')
+          return res.json()
+        })
+        .then(cfg => {
+          if (cfg.lmStudioUrl) {
+            resolvedServerUrl.current = cfg.lmStudioUrl
+            console.log(`[GC Assist] Cloud LM Studio Detected: ${cfg.lmStudioUrl}`)
+          }
+        })
+        .catch(() => {
+          if (retries < maxRetries) {
+            retries++
+            console.log(`[GC Assist] Config not ready, retrying... (${retries}/${maxRetries})`)
+            setTimeout(loadConfig, 2000)
+          } else {
+            console.log('[GC Assist] Running in Local Mode (No config.json found after retries)')
+          }
+        })
+    }
+    loadConfig()
+  }, [])
 
   // Load knowledge base — try JSON (new vector format) first, fall back to old .txt
   useEffect(() => {
@@ -272,7 +302,13 @@ export function ChatProvider({ children }) {
     localStorage.setItem('gcassist_sessions_history', JSON.stringify(sessionsHistory))
   }, [sessionsHistory])
 
+  useEffect(() => {
+    localStorage.setItem('gcassist_active_provider', activeProvider)
+  }, [activeProvider])
 
+  useEffect(() => {
+    localStorage.setItem('gcassist_active_model', activeModel)
+  }, [activeModel])
 
   // Persist Current Session
   useEffect(() => {
@@ -286,37 +322,24 @@ export function ChatProvider({ children }) {
     return `${BASE_SYSTEM_PROMPT}\n\n--- RELEVANT KNOWLEDGE BASE SECTIONS ---\n${kbText}\n--- END ---`
   }, [])
 
-  const triggerBackgroundSummary = async (msgsToSummarize) => {
+  const triggerBackgroundSummary = async (apiUrl, msgsToSummarize) => {
     const transcript = msgsToSummarize.filter(m => m.role !== 'system').map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
     try {
-      const summaryPrompt = `Summarize the following conversation context briefly in exactly 3 precise sentences. Retain key facts, preferences, and important context details. DO NOT add conversational flair, just output the facts.\n\n${transcript}`
-      const groqResult = await fetchGroqChatCompletion(
-        'You are a summarization assistant.',
-        [{ role: 'user', content: summaryPrompt }],
-        new AbortController().signal,
-        0.1,
-        150
-      )
-      // Read the non-streaming response
-      const reader = groqResult.response.body.getReader()
-      const decoder = new TextDecoder('utf-8')
-      let fullText = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '))
-        for (const line of lines) {
-          const msg = line.replace(/^data: /, '')
-          if (msg === '[DONE]') break
-          try {
-            const parsed = JSON.parse(msg)
-            fullText += parsed.choices[0]?.delta?.content || ''
-          } catch {}
-        }
-      }
-      if (fullText) {
-        const memoryMsg = { role: 'system', content: `[Archive Memory: ${fullText}]`, id: Date.now() - 1000 }
+      const resp = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'local-model',
+          messages: [{ role: 'user', content: `Summarize the following conversation context briefly in exactly 3 precise sentences. Retain key facts, preferences, and important context details. DO NOT add conversational flair, just output the facts.\n\n${transcript}` }],
+          temperature: 0.1,
+          max_tokens: 150,
+          stream: false
+        })
+      })
+      const data = await resp.json()
+      const summary = data.choices?.[0]?.message?.content
+      if (summary) {
+        const memoryMsg = { role: 'system', content: `[Archive Memory: ${summary}]`, id: Date.now() - 1000 }
         setMessages(prev => {
           const newArray = prev.filter(m => !msgsToSummarize.includes(m) && !m.content.includes('[Archive Memory:'))
           return [memoryMsg, ...newArray]
@@ -404,14 +427,43 @@ export function ChatProvider({ children }) {
       }
 
       const systemPrompt = buildSystemPrompt(relevant)
+      const apiUrl = resolvedServerUrl.current || serverUrl
 
       abortControllerRef.current = new AbortController()
 
-      // Groq API — the only provider
-      const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-      const response = groqResult.response
-      const currentProvider = 'Groq API'
-      setActiveModel(groqResult.modelUsed)
+      let response;
+      let currentProvider = 'LM Studio';
+
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abortControllerRef.current.signal,
+          body: JSON.stringify({
+            model: 'local-model',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...conversationHistory,
+            ],
+            temperature: temperature,
+            max_tokens: maxTokens,
+            stream: true,
+          }),
+        })
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        setActiveModel('local-model')
+      } catch (localError) {
+        if (localError.name === 'AbortError') throw localError;
+
+        console.warn('[GC Assist] Local server failed, falling back to Groq API...', localError)
+        currentProvider = 'Groq API'
+
+        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
+        response = groqResult.response
+        setActiveModel(groqResult.modelUsed)
+      }
+
       setActiveProvider(currentProvider)
 
       // ─── Streaming Response Processing ───
@@ -479,7 +531,7 @@ export function ChatProvider({ children }) {
         const mFilter = messages.filter(m => m.role !== 'system')
         if (mFilter.length > 4) {
           const half = Math.floor(mFilter.length / 2)
-          triggerBackgroundSummary(mFilter.slice(0, half))
+          triggerBackgroundSummary(apiUrl, mFilter.slice(0, half))
         }
       }
 
@@ -520,7 +572,7 @@ export function ChatProvider({ children }) {
       setIsLoading(false)
       setLoadingPhase('searching')
     }
-  }, [messages, buildSystemPrompt, tokenBlocked, sessionTokens])
+  }, [messages, serverUrl, buildSystemPrompt, tokenBlocked, sessionTokens])
 
   const setFeedback = useCallback((msgId, value) => {
     setMessages(prev =>
