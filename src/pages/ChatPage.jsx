@@ -14,7 +14,6 @@ const ALL_SUGGESTIONS = [
   'Enrollment requirements',
   'Academic calendar',
   'What courses are offered?',
-  'Where is the library located?',
   'How do I pay tuition?',
   'Student organizations on campus',
   'Gordon College mission & vision',
@@ -162,7 +161,7 @@ function SourceBadges({ sources, onLinkClick }) {
       {visible.map((s, i) => {
         let url = s.url || s.source
         const isGCDomain = url && url.includes('gordoncollege.edu.ph')
-        
+
         // Ensure protocol for GC links
         if (isGCDomain && !url.startsWith('http')) {
           url = 'https://' + url
@@ -176,7 +175,7 @@ function SourceBadges({ sources, onLinkClick }) {
           .replace(/\//g, ' › ')
           .replace(/-/g, ' ')
           .trim() || 'GC Website'
-          
+
         return isLink ? (
           <button
             key={i}
@@ -199,14 +198,14 @@ function SourceBadges({ sources, onLinkClick }) {
 function ExternalLinkModal({ url, onConfirm, onCancel }) {
   if (!url) return null
   return (
-    <motion.div 
+    <motion.div
       className="overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onCancel}
     >
-      <motion.div 
+      <motion.div
         className="sheet"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -257,12 +256,12 @@ function CopyButton({ text }) {
 function VoiceVisualizer({ isPlaying }) {
   const { reducedMotion } = useSettings()
   const isAnimate = isPlaying && !reducedMotion
-  
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '2px', 
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2px',
       height: '14px',
       padding: '0 2px'
     }}>
@@ -311,15 +310,15 @@ function TTSButton({ text }) {
       .trim();
 
     const utterance = new SpeechSynthesisUtterance(cleanText)
-    
+
     // Choose voice based on ttsVoice setting
     const allVoices = window.speechSynthesis.getVoices()
     const englishVoices = allVoices.filter(v => v.lang.startsWith('en'))
     const voices = englishVoices.length > 0 ? englishVoices : allVoices
-    
+
     let selectedVoice = null
     const qualityKeywords = ['google', 'natural', 'online', 'premium', 'enhanced', 'neural']
-    
+
     if (ttsVoice === 'boy') {
       const boyVoices = voices.filter(v => v.name.toLowerCase().match(/(david|male|guy|mark|george|ryan|andrew|brian|james|thomas|guy)/))
       selectedVoice = boyVoices.find(v => qualityKeywords.some(k => v.name.toLowerCase().includes(k))) || boyVoices[0]
@@ -327,24 +326,24 @@ function TTSButton({ text }) {
       const girlVoices = voices.filter(v => v.name.toLowerCase().match(/(zira|female|girl|samantha|jenny|hazel|aria|karen|linda|heather|sara)/))
       selectedVoice = girlVoices.find(v => qualityKeywords.some(k => v.name.toLowerCase().includes(k))) || girlVoices[0]
     }
-    
+
     // Fallback if no specific gendered voice found
     if (!selectedVoice && voices.length > 0) {
       selectedVoice = voices[0]
     }
-    
+
     if (selectedVoice) {
       utterance.voice = selectedVoice
       utterance.lang = selectedVoice.lang
     }
-    
-    utterance.rate = ttsRate; 
-    utterance.pitch = ttsPitch; 
-    utterance.volume = 0.9; 
-    
+
+    utterance.rate = ttsRate;
+    utterance.pitch = ttsPitch;
+    utterance.volume = 0.9;
+
     utterance.onend = () => setIsPlaying(false)
     utterance.onerror = () => setIsPlaying(false)
-    
+
     window.speechSynthesis.cancel()
     window.speechSynthesis.speak(utterance)
     setIsPlaying(true)
@@ -358,11 +357,11 @@ function TTSButton({ text }) {
 
   return (
     <Tooltip text={isPlaying ? "Stop reading" : "Read aloud"}>
-      <button 
-        className={`msg-action-btn ${isPlaying ? 'active-up' : ''}`} 
-        onClick={handleTogglePlay} 
-        style={{ 
-          position: 'relative', 
+      <button
+        className={`msg-action-btn ${isPlaying ? 'active-up' : ''}`}
+        onClick={handleTogglePlay}
+        style={{
+          position: 'relative',
           overflow: 'hidden',
           background: isPlaying ? 'rgba(34, 197, 94, 0.1)' : '',
           borderColor: isPlaying ? 'rgba(34, 197, 94, 0.3)' : ''
@@ -392,7 +391,7 @@ function FeedbackButtons({ msgId, feedback, setFeedback, disabled, user, navigat
       navigate('/login')
       return
     }
-    
+
     const isLike = type === 'up'
     const currentFeedback = feedback === type ? null : type
     setFeedback(msgId, currentFeedback)
@@ -404,14 +403,14 @@ function FeedbackButtons({ msgId, feedback, setFeedback, disabled, user, navigat
         if (msgIndex > 0) {
           const aiMsg = messages[msgIndex]
           const userMsg = messages[msgIndex - 1]
-          
+
           await supabase.from('feedback').upsert({
             user_id: user.id,
             user_question: userMsg.content,
             ai_response: aiMsg.content,
             is_like: isLike
-          }, { 
-            onConflict: 'user_id,user_question,ai_response' 
+          }, {
+            onConflict: 'user_id,user_question,ai_response'
           })
         }
       } catch (err) {
@@ -618,7 +617,7 @@ export default function ChatPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-             transition={{ duration: 0.4, ease: 'easeOut' }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
           >
             <img src={logoPath} alt="GC Assist" className="chat-hero-logo" />
             <h1 className="chat-hero-heading">What can I help you with?</h1>
@@ -671,9 +670,9 @@ export default function ChatPage() {
                               href = 'https://' + href.replace(/^\/+/, '')
                             }
                             return (
-                              <a 
-                                {...props} 
-                                href="#" 
+                              <a
+                                {...props}
+                                href="#"
                                 onClick={(e) => {
                                   e.preventDefault()
                                   setPendingLink(href)
@@ -705,14 +704,14 @@ export default function ChatPage() {
                         <TTSButton text={msg.content} />
                         <CopyButton text={msg.content} />
                         <FeedbackButtons
-                           msgId={msg.id}
-                           feedback={msg.feedback}
-                           setFeedback={setFeedback}
-                           disabled={isHistoryMode}
-                           user={user}
-                           navigate={navigate}
-                           messages={activeMessages}
-                         />
+                          msgId={msg.id}
+                          feedback={msg.feedback}
+                          setFeedback={setFeedback}
+                          disabled={isHistoryMode}
+                          user={user}
+                          navigate={navigate}
+                          messages={activeMessages}
+                        />
                       </div>
                     </div>
                   </div>
@@ -815,10 +814,10 @@ export default function ChatPage() {
 
       <AnimatePresence>
         {pendingLink && (
-          <ExternalLinkModal 
-            url={pendingLink} 
-            onConfirm={handleLinkConfirm} 
-            onCancel={() => setPendingLink(null)} 
+          <ExternalLinkModal
+            url={pendingLink}
+            onConfirm={handleLinkConfirm}
+            onCancel={() => setPendingLink(null)}
           />
         )}
       </AnimatePresence>

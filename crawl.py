@@ -32,7 +32,6 @@ OUTPUT_DIR      = Path(__file__).parent / "public"
 CACHE_FILE      = Path(__file__).parent / "crawl_cache.json"
 REPORT_FILE     = OUTPUT_DIR / "crawl_report.json"
 MANUAL_DATA     = Path(__file__).parent / "manual_data.json"
-RAW_KB_JSON     = OUTPUT_DIR / "knowledge_base_raw.json"
 TXT_KB_FILE     = OUTPUT_DIR / "knowledge_base.txt"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
@@ -554,21 +553,8 @@ def main():
             results.extend(manual)
             print(f"  [OK] +{len(manual)} manual entries from manual_data.json")
 
-    # ── Save .txt KB (Legacy Fallback) ──
+    # ── Save .txt KB ──
     save_text_kb(results)
-
-    # ── Chunk for JSON ──
-    print("  Chunking content for vectorization...")
-    chunks = build_chunks(results)
-    print(f"  [OK] {len(chunks)} semantic chunks generated.")
-
-    # ── Save raw KB JSON ──
-    with open(RAW_KB_JSON, "w", encoding="utf-8") as f:
-        json.dump(chunks, f)
-    print(f"  [OK] knowledge_base_raw.json — {RAW_KB_JSON.stat().st_size / 1024:.1f} KB")
-
-    # ── Validate ──
-    issues, stats = validate(chunks, report_pages)
 
     # ── Save cache ──
     save_cache(cache)
@@ -583,17 +569,11 @@ def main():
             "depth":     args.depth,
             "max_pages": args.max_pages,
         },
-        "stats":       stats,
-        "total_chunks": len(chunks),
-        "validation_issues": issues,
         "pages":       report_pages,
     }
     with open(REPORT_FILE, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     print(f"  [OK] Crawl report saved → crawl_report.json")
-
-    print("\n  Next step: run 'node vectorize.js' to generate embeddings.\n")
-
 
 if __name__ == "__main__":
     main()
