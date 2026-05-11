@@ -13,7 +13,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
       try {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
           },
@@ -51,7 +51,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
         if (err.name === 'AbortError') throw err;
         console.warn(`Groq model ${model} fetch failed:`, err);
         lastError = err;
-        break; 
+        break;
       }
     }
   }
