@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { useSettings } from './SettingsContext'
+import { pipeline } from '@xenova/transformers'
 import { encode } from 'gpt-tokenizer'
 import { fetchGroqChatCompletion } from '../services/groqApi'
 import { useAuth } from './AuthContext'
@@ -34,9 +35,9 @@ KNOWLEDGE BASE USAGE: Use the knowledge base provided below. Always prefer infor
 CONCLUSION RULE: Every response MUST end with a short 1-sentence conclusion or closing remark (e.g. "For more details, visit the official GC website or contact the relevant office."). This ensures the response never feels cut off.`
 
 // ─── Constants ────────────────────────────────────────────────
-const MAX_KB_CHARS = 6000
-const MAX_SESSION_TOKENS = 10000   // Reduced to fit Groq's 12k TPM limit
-const WARN_SESSION_TOKENS = 8000   // Warn earlier
+const MAX_KB_CHARS = 8000
+const MAX_SESSION_TOKENS = 8000   // warn + block before LM Studio chokes
+const WARN_SESSION_TOKENS = 6500  // show warning at this threshold
 
 // ─── Helpers ──────────────────────────────────────────────────
 function countTokens(text) {
@@ -105,11 +106,35 @@ function scoreByKeywords(section, query) {
   return score
 }
 
-// ─── RAG Search: uses keyword fallback ───
-async function findRelevantSections(sections, query) {
+// ─── RAG Search: uses vectors if available, falls back to keywords ───
+async function findRelevantSections(sections, query, embedder) {
   if (sections.length === 0) return []
 
-  const scored = sections.map(s => ({ ...s, score: scoreByKeywords(s, query) }))
+  let scored
+
+  // Try vector search first
+  if (embedder) {
+    try {
+      const output = await embedder(query, { pooling: 'mean', normalize: true })
+      const queryVector = Array.from(output.data)
+
+      scored = sections.map(s => {
+        let score = 0
+        if (s.vector) {
+          for (let i = 0; i < queryVector.length; i++) score += queryVector[i] * s.vector[i]
+        }
+        return { ...s, score }
+      })
+    } catch (err) {
+      console.warn('[GC Assist] Vector search failed, falling back to keywords:', err)
+      scored = null
+    }
+  }
+
+  // Fallback: keyword-based search (no embedder or embedder failed)
+  if (!scored) {
+    scored = sections.map(s => ({ ...s, score: scoreByKeywords(s, query) }))
+  }
 
   // Sort by score descending
   const sorted = scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score)
@@ -199,12 +224,27 @@ export function ChatProvider({ children }) {
   const kbSections = useRef([])
   const resolvedServerUrl = useRef(null)
   const abortControllerRef = useRef(null)
+  const embedderRef = useRef(null)
 
   const { serverUrl, temperature, maxTokens } = useSettings()
 
   const tokenWarning = sessionTokens >= WARN_SESSION_TOKENS && sessionTokens < MAX_SESSION_TOKENS
   const tokenBlocked = sessionTokens >= MAX_SESSION_TOKENS
   const tokenPct = Math.min(100, Math.round((sessionTokens / MAX_SESSION_TOKENS) * 100))
+
+  // Initialize HuggingFace Vector Embedder (non-blocking, loads in background)
+  useEffect(() => {
+    let active = true
+    pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+      .then(pipe => {
+        if (active) {
+          embedderRef.current = pipe
+          console.log('[GC Assist] Semantic embedder pipeline loaded.')
+        }
+      })
+      .catch(err => console.warn('[GC Assist] Embedder not available, using keyword fallback:', err))
+    return () => { active = false }
+  }, [])
 
   // Load cloud config (written by cloud.py) with retry logic
   useEffect(() => {
@@ -238,14 +278,25 @@ export function ChatProvider({ children }) {
 
   // Load knowledge base & metadata
   useEffect(() => {
-    fetch('/knowledge_base.txt?t=' + new Date().getTime())
-      .then(res => { if (!res.ok) throw new Error(); return res.text() })
-      .then(text => {
-        const sections = parseLegacySections(text)
-        kbSections.current = sections
-        console.log(`[GC Assist] KB loaded (TXT): ${sections.length} sections`)
+    // Try JSON (new vector format) first, fall back to old .txt
+    fetch('/knowledge_base.json?t=' + new Date().getTime())
+      .then(res => { if (!res.ok) throw new Error(); return res.json() })
+      .then(data => {
+        kbSections.current = data
+        console.log(`[GC Assist] KB loaded (JSON): ${data.length} vector chunks`)
       })
-      .catch(() => console.warn('[GC Assist] No knowledge base found — run python crawl.py'))
+      .catch(() => {
+        // Fallback: try old knowledge_base.txt
+        console.warn('[GC Assist] No knowledge_base.json, trying legacy .txt format...')
+        fetch('/knowledge_base.txt?t=' + new Date().getTime())
+          .then(res => { if (!res.ok) throw new Error(); return res.text() })
+          .then(text => {
+            const sections = parseLegacySections(text)
+            kbSections.current = sections
+            console.log(`[GC Assist] KB loaded (legacy TXT): ${sections.length} sections`)
+          })
+          .catch(() => console.warn('[GC Assist] No knowledge base found — run python crawl.py'))
+      })
 
 
     // Load KB metadata/report for timestamp
@@ -369,8 +420,8 @@ export function ChatProvider({ children }) {
         content: m.content,
       }))
 
-      // 1. RAG lookup (keyword search)
-      const relevant = await findRelevantSections(kbSections.current, text)
+      // 1. RAG lookup (vector if ready, otherwise keyword fallback)
+      const relevant = await findRelevantSections(kbSections.current, text, embedderRef.current)
 
       // Collect KB sources for attribution (deduplicated)
       const sourcesSet = new Set()
