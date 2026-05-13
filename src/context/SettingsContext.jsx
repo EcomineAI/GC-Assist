@@ -16,7 +16,11 @@ export function SettingsProvider({ children }) {
 
   const [maxTokens, setMaxTokens] = useState(() => {
     const stored = localStorage.getItem('gcassist_max_tokens')
-    return stored !== null ? parseInt(stored, 10) : 8000
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10)
+      return parsed > 8000 ? 8000 : parsed
+    }
+    return 8000
   })
 
   const [ttsRate, setTtsRate] = useState(() => {
