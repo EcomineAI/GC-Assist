@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const SettingsContext = createContext()
 
-const SERVER_URL = 'http://localhost:1234/v1/chat/completions'
+const SERVER_URL = 'http://127.0.0.1:1234/v1/chat/completions'
 
 export function SettingsProvider({ children }) {
   const [ttsVoice, setTtsVoice] = useState(() => {
