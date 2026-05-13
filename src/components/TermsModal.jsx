@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ShieldCheck, Info, Check } from 'lucide-react'
 
-export default function TermsModal({ onAccept }) {
+export default function TermsModal({ onAccept, onClose, viewOnly = false }) {
   const [checked, setChecked] = useState(false)
 
   return (
@@ -10,7 +10,7 @@ export default function TermsModal({ onAccept }) {
       className="overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      style={{ zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+      style={{ zIndex: 3000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
     >
       <motion.div 
         className="sheet"
@@ -44,52 +44,68 @@ export default function TermsModal({ onAccept }) {
         </div>
 
         <div className="sheet-actions" style={{ marginTop: '24px', borderTop: '1px solid var(--color-separator)', paddingTop: '16px' }}>
-          <label 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              cursor: 'pointer',
-              marginBottom: '20px',
-              userSelect: 'none'
-            }}
-          >
-            <div 
-              onClick={(e) => { e.preventDefault(); setChecked(!checked); }}
-              style={{
-                width: '24px',
-                height: '24px',
-                flexShrink: 0,
-                borderRadius: '6px',
-                border: `2px solid ${checked ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                background: checked ? 'var(--color-primary)' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
+          {!viewOnly ? (
+            <>
+              <label 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  cursor: 'pointer',
+                  marginBottom: '20px',
+                  userSelect: 'none'
+                }}
+              >
+                <div 
+                  onClick={(e) => { e.preventDefault(); setChecked(!checked); }}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    flexShrink: 0,
+                    borderRadius: '6px',
+                    border: `2px solid ${checked ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    background: checked ? 'var(--color-primary)' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {checked && <Check size={14} color="white" strokeWidth={3} />}
+                </div>
+                <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>
+                  I agree to the terms and data collection policy
+                </span>
+              </label>
+
+              <button 
+                className="btn btn-primary" 
+                onClick={onAccept}
+                disabled={!checked}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px', 
+                  fontWeight: 600,
+                  opacity: checked ? 1 : 0.5,
+                  cursor: checked ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Accept and Continue
+              </button>
+            </>
+          ) : (
+            <button 
+              className="btn btn-primary" 
+              onClick={onClose}
+              style={{ 
+                width: '100%', 
+                padding: '14px', 
+                fontWeight: 600
               }}
             >
-              {checked && <Check size={14} color="white" strokeWidth={3} />}
-            </div>
-            <span style={{ fontSize: '13px', color: 'var(--text-2)' }}>
-              I agree to the terms and data collection policy
-            </span>
-          </label>
-
-          <button 
-            className="btn btn-primary" 
-            onClick={onAccept}
-            disabled={!checked}
-            style={{ 
-              width: '100%', 
-              padding: '14px', 
-              fontWeight: 600,
-              opacity: checked ? 1 : 0.5,
-              cursor: checked ? 'pointer' : 'not-allowed'
-            }}
-          >
-            Accept and Continue
-          </button>
+              Close
+            </button>
+          )}
         </div>
       </motion.div>
     </motion.div>

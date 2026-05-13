@@ -139,7 +139,7 @@ function Loader2({ className }) {
   return <Zap className={`spin ${className}`} size={24} />
 }
 
-function AboutSheet({ isOpen, onClose, logoPath }) {
+function AboutSheet({ isOpen, onClose, logoPath, onOpenTerms }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -192,6 +192,27 @@ function AboutSheet({ isOpen, onClose, logoPath }) {
                       <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>EcomineAI Developer</div>
                     </div>
                   </div>
+                </div>
+
+                <div style={{ marginTop: '8px', textAlign: 'center' }}>
+                  <button 
+                    onClick={onOpenTerms}
+                    style={{ 
+                      background: 'transparent', 
+                      border: 'none', 
+                      color: 'var(--color-primary)', 
+                      fontSize: '14px', 
+                      fontWeight: 600, 
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px'
+                    }}
+                  >
+                    <Shield size={16} />
+                    View Terms & Conditions
+                  </button>
                 </div>
 
                 <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textAlign: 'center', marginTop: '12px' }}>
@@ -277,6 +298,7 @@ export default function App() {
   const [showAboutSheet, setShowAboutSheet] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [showUpdatePopup, setShowUpdatePopup] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
 
   // Check for updates on mount
   useEffect(() => {
@@ -323,6 +345,9 @@ export default function App() {
           {!hasAcceptedTerms && !isAuthPage && (
             <TermsModal onAccept={() => setHasAcceptedTerms(true)} />
           )}
+          {showTermsModal && (
+            <TermsModal viewOnly onClose={() => setShowTermsModal(false)} />
+          )}
         </AnimatePresence>
 
         <FeedbackHistoryModal
@@ -339,6 +364,7 @@ export default function App() {
           isOpen={showAboutSheet}
           onClose={() => setShowAboutSheet(false)}
           logoPath={logoPath}
+          onOpenTerms={() => { setShowAboutSheet(false); setShowTermsModal(true); }}
         />
 
         {/* Profile Sidebar Item / Menu */}
