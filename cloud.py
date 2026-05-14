@@ -28,6 +28,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 try:
     import qrcode
+    import qrcode.image.svg
     HAS_QR = True
 except ImportError:
     HAS_QR = False
@@ -172,6 +173,19 @@ def write_config(lm_url):
         json.dump(cfg, f, indent=2)
     print(f"[config] Written dist/config.json with LM Studio URL.")
 
+def save_qr_svg(url):
+    """Save an SVG QR code to dist/qr.svg so the PWA can display it."""
+    if not HAS_QR:
+        return
+    try:
+        factory = qrcode.image.svg.SvgImage
+        img = qrcode.make(url, image_factory=factory)
+        qr_path = os.path.join(DIST_DIR, "qr.svg")
+        img.save(qr_path)
+        print(f"[config] Dynamic QR code saved to dist/qr.svg")
+    except Exception as e:
+        print(f"[config] Failed to save QR SVG: {e}")
+
 
 # ─── MAIN ─────────────────────────────────────────────────────
 
@@ -203,11 +217,15 @@ if __name__ == "__main__":
             app_url = tunnel_urls["app"]
             lm_url  = tunnel_urls["lm"]
 
-    # Step 4: Write config.json so remote browsers use our LM tunnel
-    print("[4/4] Configuring remote LM Studio access...")
+    # Step 4: Write config.json and generate QR so remote browsers use our tunnel
+    print("[4/4] Configuring remote access and assets...")
     if lm_url:
         write_config(lm_url)
-    else:
+    
+    if app_url:
+        save_qr_svg(app_url)
+    
+    if not lm_url:
         print("[config] WARNING: LM Studio tunnel not ready. Remote users may not get AI responses.")
         print("         Is LM Studio running on port 1234?")
 
