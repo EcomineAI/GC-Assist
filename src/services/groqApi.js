@@ -1,4 +1,4 @@
-const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'groq/compound-mini').split(',');
+const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'llama-3.1-8b-instant,llama-3.3-70b-versatile,mixtral-8x7b-32768').split(',');
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -19,7 +19,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
           },
           signal: signal,
           body: JSON.stringify({
-            model: model.trim(),
+            model: model.trim().replace(/^groq\//i, ''),
             messages: [
               { role: 'system', content: systemPrompt },
               ...conversationHistory,
@@ -31,7 +31,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
         });
 
         if (response.ok) {
-          return { response, modelUsed: model.trim() };
+          return { response, modelUsed: model.trim().replace(/^groq\//i, '') };
         }
 
         // If rate limited (429) or server error (503), wait and retry the SAME model
@@ -43,7 +43,13 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
           continue;
         }
 
-        const errorData = await response.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          const text = await response.text().catch(() => 'No response body');
+          errorData = { error: { message: text } };
+        }
         console.warn(`Groq model ${model} failed with status ${response.status}:`, errorData);
         lastError = new Error(`Groq HTTP ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
         break; // Stop retrying this model, move to next model in the list
