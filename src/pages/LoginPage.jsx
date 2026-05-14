@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  
+
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const { isDark, colorTheme } = useTheme()
@@ -27,11 +27,11 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    
+
     try {
       const { error } = await signIn(email, password)
       if (error) throw error
-      
+
       if (email.toLowerCase() === 'admin@gmail.com') {
         navigate('/admin')
       } else {
@@ -48,8 +48,8 @@ export default function LoginPage() {
     <div className="auth-container">
       <div className="auth-bg-blob auth-bg-blob-1" />
       <div className="auth-bg-blob auth-bg-blob-2" />
-      
-      <motion.div 
+
+      <motion.div
         className="auth-card"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,10 +58,10 @@ export default function LoginPage() {
         <Link to="/" className="auth-back-link" style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', color: 'var(--color-text-secondary)' }}>
           <ArrowLeft size={20} />
         </Link>
-        
+
         <div className="auth-header">
           <img src={getLogo()} alt="GC Assist" className="auth-logo" />
-          <h1 className="auth-title">Welcome Back</h1>
+          <h1 className="auth-title">Welcome</h1>
           <p className="auth-subtitle">Log in to continue to GC Assist</p>
         </div>
 
@@ -72,9 +72,9 @@ export default function LoginPage() {
             <label className="auth-label">Email</label>
             <div style={{ position: 'relative' }}>
               <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
-              <input 
-                type="email" 
-                className="auth-input" 
+              <input
+                type="email"
+                className="auth-input"
                 style={{ paddingLeft: '2.75rem' }}
                 placeholder="name@gordoncollege.edu.ph"
                 value={email}
@@ -88,8 +88,8 @@ export default function LoginPage() {
             <label className="auth-label">Password</label>
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
-              <input 
-                type={showPassword ? "text" : "password"} 
+              <input
+                type={showPassword ? "text" : "password"}
                 className="auth-input"
                 style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
                 placeholder="Enter password"
