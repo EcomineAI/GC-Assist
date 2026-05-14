@@ -212,6 +212,14 @@ function ExternalLinkModal({ url, onConfirm, onCancel }) {
         exit={{ y: 50, opacity: 0 }}
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: '400px', margin: '0 auto' }}
+        drag="y"
+        dragConstraints={{ top: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(e, info) => {
+          if (info.offset.y > 100 || info.velocity.y > 500) {
+            onCancel()
+          }
+        }}
       >
         <div className="sheet-handle" />
         <div className="sheet-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

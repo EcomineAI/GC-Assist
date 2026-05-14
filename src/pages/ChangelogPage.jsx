@@ -1,18 +1,36 @@
 import { motion } from 'framer-motion'
 import { FileText, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import ReactMarkdown from 'react-markdown'
 import changelogContent from '../../CHANGELOG.md?raw'
 
 export default function ChangelogPage() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const isAdmin = user?.email?.toLowerCase() === 'admin@gmail.com'
+
   return (
     <div className="settings-page" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', color: 'var(--color-text)' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <Link to="/" style={{ color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            color: 'var(--color-text-secondary)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem', 
+            cursor: 'pointer',
+            padding: 0,
+            fontSize: '1rem'
+          }}
+        >
           <ArrowLeft size={20} />
           Back
-        </Link>
+        </button>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <FileText size={32} color="var(--color-primary)" />
           System Updates

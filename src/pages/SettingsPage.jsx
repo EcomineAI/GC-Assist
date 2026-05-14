@@ -4,11 +4,14 @@ import { ChevronRight, ExternalLink } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useSettings } from '../context/SettingsContext'
 import { useChat } from '../context/ChatContext'
+import { useAuth } from '../context/AuthContext'
 import Tooltip from '../components/Tooltip'
 
 export default function SettingsPage() {
   const { isDark, toggleTheme, colorTheme, setColorTheme } = useTheme()
   const { clearMessages, activeProvider, activeModel } = useChat()
+  const { user } = useAuth()
+  const isAdmin = user?.email?.toLowerCase() === 'admin@gmail.com'
     const { 
     ttsVoice, setTtsVoice, 
     ttsRate, setTtsRate, 
@@ -68,7 +71,7 @@ export default function SettingsPage() {
                 <div className="settings-row-right" style={{ display: 'flex', gap: '12px' }}>
                   {[
                     { id: 'purple', color: '#7C3AED' },
-                    { id: 'green', color: '#10B981' },
+                    { id: 'green', color: '#059669' },
                     { id: 'blue', color: '#3B82F6' }
                   ].map((theme) => (
                     <button
@@ -243,19 +246,21 @@ export default function SettingsPage() {
       </div>
 
       {/* — Data & Privacy — */}
-      <div className="settings-section">
-        <div className="settings-section-title">Data & Privacy</div>
-        <div className="settings-group">
-          <Tooltip text="Warning: This will delete all your chats" position="top" fullWidth={true}>
-            <div className="settings-row settings-row--danger" onClick={() => setShowClearConfirm(true)}>
-              <div className="settings-row-left">
-                <div className="settings-row-label">Clear Chat History</div>
-                <div className="settings-row-sublabel">Delete all conversations</div>
+      {!isAdmin && (
+        <div className="settings-section">
+          <div className="settings-section-title">Data & Privacy</div>
+          <div className="settings-group">
+            <Tooltip text="Warning: This will delete all your chats" position="top" fullWidth={true}>
+              <div className="settings-row settings-row--danger" onClick={() => setShowClearConfirm(true)}>
+                <div className="settings-row-left">
+                  <div className="settings-row-label">Clear Chat History</div>
+                  <div className="settings-row-sublabel">Delete all conversations</div>
+                </div>
               </div>
-            </div>
-          </Tooltip>
+            </Tooltip>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* — Advanced — */}
       <div className="settings-section">
@@ -312,6 +317,14 @@ export default function SettingsPage() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setShowVoiceSheet(false)
+                }
+              }}
             >
               <div className="sheet-handle" />
               <div className="sheet-title">Voice Tone</div>
@@ -354,6 +367,14 @@ export default function SettingsPage() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setShowClearConfirm(false)
+                }
+              }}
             >
               <div className="sheet-handle" />
               <div className="sheet-title">Clear all conversations?</div>
@@ -386,6 +407,14 @@ export default function SettingsPage() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setShowFeedback(false)
+                }
+              }}
             >
               <div className="sheet-handle" />
               <div className="sheet-title">Send Feedback</div>
@@ -420,6 +449,14 @@ export default function SettingsPage() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setShowAuthorInfo(false)
+                }
+              }}
             >
               <div className="sheet-handle" />
               <div className="sheet-title">About the Creator</div>

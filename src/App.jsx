@@ -151,14 +151,22 @@ function AboutSheet({ isOpen, onClose, logoPath, onOpenTerms }) {
           onClick={onClose}
           style={{ zIndex: 2001 }}
         >
-          <motion.div
-            className="sheet about-sheet"
-            onClick={e => e.stopPropagation()}
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          >
+            <motion.div
+              className="sheet about-sheet"
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  onClose()
+                }
+              }}
+            >
             <div className="sheet-handle" />
             <div className="sheet-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Heart size={20} color="var(--color-primary)" />
@@ -336,7 +344,15 @@ export default function App() {
   const UserAvatarIcon = AVATARS.find(a => a.id === userAvatarId)?.icon || Smile
   const userAvatarColor = AVATARS.find(a => a.id === userAvatarId)?.color || 'var(--color-primary)'
 
+  const isAdminMode = user?.email?.toLowerCase() === 'admin@gmail.com'
   const isAuthPage = ['/login', '/signup', '/forgot-password', '/reset-password'].includes(location.pathname)
+
+  const filteredNavItems = isAdminMode 
+    ? [
+        { to: '/admin', label: 'Admin', icon: Shield },
+        ...navItems.filter(item => item.to !== '/' && item.to !== '/chat')
+      ]
+    : navItems
 
   return (
     <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
@@ -375,7 +391,7 @@ export default function App() {
           </div>
 
           <nav className="sidebar-nav">
-            {navItems.map(({ to, label, icon: Icon }) => (
+            {filteredNavItems.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -395,18 +411,6 @@ export default function App() {
               <Heart size={20} />
               About
             </button>
-
-            {/* Admin Panel Button (only for admin) */}
-            {(user && user.email.toLowerCase() === 'admin@gmail.com') && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-                style={{ color: 'var(--color-primary)' }}
-              >
-                <Shield size={20} />
-                Admin Panel
-              </NavLink>
-            )}
 
             {/* Profile Section */}
             {user ? (
@@ -512,7 +516,7 @@ export default function App() {
 
         {/* Mobile Bottom Nav */}
         <nav className="bottom-nav">
-          {navItems.filter(item => !item.hiddenMobile).map(({ to, label, icon: Icon }) => (
+          {filteredNavItems.filter(item => !item.hiddenMobile).map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -552,6 +556,14 @@ export default function App() {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                drag="y"
+                dragConstraints={{ top: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, info) => {
+                  if (info.offset.y > 100 || info.velocity.y > 500) {
+                    setShowMoreMenu(false)
+                  }
+                }}
               >
                 <div className="sheet-handle" />
                 <div className="sheet-title">More Options</div>
@@ -562,6 +574,7 @@ export default function App() {
                     <span>System Updates</span>
                     <ChevronRight size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
                   </Link>
+
 
                   <button className="menu-item-link" onClick={() => { setShowAboutSheet(true); setShowMoreMenu(false); }}>
                     <Heart size={20} />

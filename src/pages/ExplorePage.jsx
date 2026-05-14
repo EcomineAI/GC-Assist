@@ -6,6 +6,7 @@ import {
   HeartHandshake, Building2, GraduationCap, Megaphone,
   Phone, Landmark, Search, SearchX
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const CATEGORIES = [
   {
@@ -136,6 +137,8 @@ export default function ExplorePage() {
   const [search, setSearch] = useState('')
   const [selectedCard, setSelectedCard] = useState(null)
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isAdmin = user?.email?.toLowerCase() === 'admin@gmail.com'
 
   const filtered = useMemo(() => {
     if (!search.trim()) return CATEGORIES
@@ -228,6 +231,14 @@ export default function ExplorePage() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100 || info.velocity.y > 500) {
+                  setSelectedCard(null)
+                }
+              }}
             >
               <div className="sheet-handle" />
               <div className="sheet-title">{selectedCard.name}</div>
@@ -245,12 +256,14 @@ export default function ExplorePage() {
                 >
                   Close
                 </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => handleAskMore(selectedCard.prompt)}
-                >
-                  Ask more about this
-                </button>
+                {!isAdmin && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleAskMore(selectedCard.prompt)}
+                  >
+                    Ask more about this
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>
