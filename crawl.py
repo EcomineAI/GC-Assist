@@ -511,6 +511,38 @@ def save_text_kb(results):
     print(f"  [OK] knowledge_base.txt — {TXT_KB_FILE.stat().st_size / 1024:.1f} KB")
 
 
+def generate_qr_code(url="https://gcassist.vercel.app"):
+    """
+    Generates a branded SVG QR code for the application.
+    Requires: pip install qrcode[svg]
+    """
+    try:
+        import qrcode
+        import qrcode.image.svg
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+
+        # Create an SVG image
+        factory = qrcode.image.svg.SvgPathImage
+        img = qr.make_image(image_factory=factory)
+        
+        qr_path = Path("public/qr.svg")
+        img.save(str(qr_path))
+        print(f"  [OK] QR code generated for {url} → public/qr.svg")
+    except ImportError:
+        print("  [i] qrcode library not found — QR generation skipped.")
+        print("      Install with: pip install qrcode[svg]\n")
+    except Exception as e:
+        print(f"  [!] Failed to generate QR code: {e}")
+
+
 # ═══════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════
@@ -574,6 +606,9 @@ def main():
     with open(REPORT_FILE, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     print(f"  [OK] Crawl report saved → crawl_report.json")
+
+    # ── Generate QR Code ──
+    generate_qr_code()
 
 if __name__ == "__main__":
     main()
