@@ -4,7 +4,8 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import {
   MessageCircle, LayoutGrid, SlidersHorizontal, Zap,
   User, LogOut, History, X, Smile, Ghost, Cat, Dog,
-  Bird, Rocket, Star, Coffee, Moon, Sun, ChevronRight, Heart, Shield, FileText, Menu
+  Bird, Rocket, Star, Coffee, Moon, Sun, ChevronRight, Heart, Shield, FileText, Menu,
+  Share, PlusSquare
 } from 'lucide-react'
 import ChatPage from './pages/ChatPage'
 import ExplorePage from './pages/ExplorePage'
@@ -258,6 +259,14 @@ function UpdatePopup({ isOpen, onClose }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             style={{ maxWidth: '400px', margin: 'auto', borderRadius: '20px' }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 500) {
+                onClose()
+              }
+            }}
           >
             <div className="sheet-handle" />
             <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -279,6 +288,91 @@ function UpdatePopup({ isOpen, onClose }) {
         </motion.div>
       )}
     </AnimatePresence>
+  )
+}
+
+function IOSInstallPrompt() {
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+    // Check if in standalone mode
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches
+    // Check if dismissed
+    const isDismissed = localStorage.getItem('ios-prompt-dismissed') === 'true'
+
+    if (isIOS && !isStandalone && !isDismissed) {
+      setShow(true)
+    }
+  }, [])
+
+  if (!show) return null
+
+  return (
+    <motion.div
+      className="ios-prompt"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      style={{
+        position: 'fixed',
+        bottom: 'calc(var(--bottomnav-height) + 20px)',
+        left: '16px',
+        right: '16px',
+        background: 'var(--color-surface)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        padding: '16px',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        zIndex: 5000,
+        border: '1px solid var(--color-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+            <Rocket size={24} />
+          </div>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>Install GC Assist</h4>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-secondary)' }}>Add to your home screen for the best experience</p>
+          </div>
+        </div>
+        <button 
+          onClick={() => { setShow(false); localStorage.setItem('ios-prompt-dismissed', 'true'); }}
+          style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+        >
+          <X size={20} />
+        </button>
+      </div>
+      
+      <div style={{ 
+        background: 'var(--color-bg)', 
+        padding: '12px', 
+        borderRadius: '12px', 
+        fontSize: '13px', 
+        lineHeight: '1.5',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>1</span>
+          <span>Tap the <strong>Share</strong> button in Safari</span>
+          <Share size={16} style={{ marginLeft: 'auto', color: 'var(--color-primary)' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>2</span>
+          <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+          <PlusSquare size={16} style={{ marginLeft: 'auto', color: 'var(--color-primary)' }} />
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
@@ -513,6 +607,9 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* iOS Install Prompt */}
+        <IOSInstallPrompt />
 
         {/* Mobile Bottom Nav */}
         <nav className="bottom-nav">
