@@ -478,6 +478,7 @@ export function ChatProvider({ children }) {
         if (!response.ok) throw new Error(`LM Studio Fallback HTTP ${response.status}`)
       }
 
+      console.log(`[GC Assist] Sending request to ${currentProvider} (${activeModel}) with ${countTokens(systemPrompt)} tokens of context.`);
       setActiveProvider(currentProvider)
 
       // ─── Streaming Response Processing ───
