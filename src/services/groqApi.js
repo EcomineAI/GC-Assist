@@ -1,4 +1,4 @@
-const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'llama-3.1-8b-instant,llama-3.3-70b-versatile,mixtral-8x7b-32768').split(',');
+const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'groq/compound-mini,llama-3.3-70b-versatile,mixtral-8x7b-32768').split(',');
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -19,7 +19,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
           },
           signal: signal,
           body: JSON.stringify({
-            model: model.trim().replace(/^groq\//i, ''),
+            model: model.trim().replace(/^groq\/(?!compound)/i, ''),
             messages: [
               { role: 'system', content: systemPrompt },
               ...conversationHistory,
@@ -31,7 +31,7 @@ export const fetchGroqChatCompletion = async (systemPrompt, conversationHistory,
         });
 
         if (response.ok) {
-          return { response, modelUsed: model.trim().replace(/^groq\//i, '') };
+          return { response, modelUsed: model.trim().replace(/^groq\/(?!compound)/i, '') };
         }
 
         // If rate limited (429) or server error (503), wait and retry the SAME model
