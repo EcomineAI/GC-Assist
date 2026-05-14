@@ -194,7 +194,7 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'LM Studio')
+  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
   const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'local-model')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
@@ -446,9 +446,19 @@ export function ChatProvider({ children }) {
       abortControllerRef.current = new AbortController()
 
       let response;
-      let currentProvider = 'LM Studio';
+      let currentProvider = 'Groq API';
 
       try {
+        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
+        response = groqResult.response
+        setActiveModel(groqResult.modelUsed)
+      } catch (groqError) {
+        if (groqError.name === 'AbortError') throw groqError;
+
+        console.warn('[GC Assist] Groq API failed, falling back to Local LM Studio...', groqError)
+        currentProvider = 'LM Studio'
+        setActiveModel('local-model')
+
         response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -465,17 +475,7 @@ export function ChatProvider({ children }) {
           }),
         })
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        setActiveModel('local-model')
-      } catch (localError) {
-        if (localError.name === 'AbortError') throw localError;
-
-        console.warn('[GC Assist] Local server failed, falling back to Groq API...', localError)
-        currentProvider = 'Groq API'
-
-        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-        response = groqResult.response
-        setActiveModel(groqResult.modelUsed)
+        if (!response.ok) throw new Error(`LM Studio Fallback HTTP ${response.status}`)
       }
 
       setActiveProvider(currentProvider)
