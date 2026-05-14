@@ -403,7 +403,7 @@ function IOSInstallPrompt() {
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut, updateProfile } = useAuth()
+  const { user, signOut, updateProfile, loading } = useAuth()
 
   useEffect(() => {
     if (user && user.email.toLowerCase() === 'admin@gmail.com' && location.pathname === '/') {
@@ -425,6 +425,26 @@ export default function App() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [showUpdatePopup, setShowUpdatePopup] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
+  const [sessionAcceptedTerms, setSessionAcceptedTerms] = useState(false)
+
+  // Guest visit counter for terms (Every 5 refreshes)
+  useEffect(() => {
+    if (!loading && !user) {
+      const visitCount = parseInt(localStorage.getItem('gcassist_guest_visits') || '0', 10)
+      const hasAccepted = localStorage.getItem('gcassist_guest_accepted') === 'true'
+      
+      if (!hasAccepted || visitCount >= 5) {
+        setSessionAcceptedTerms(false)
+        if (visitCount >= 5) {
+          localStorage.setItem('gcassist_guest_visits', '0')
+          localStorage.setItem('gcassist_guest_accepted', 'false')
+        }
+      } else {
+        setSessionAcceptedTerms(true)
+        localStorage.setItem('gcassist_guest_visits', (visitCount + 1).toString())
+      }
+    }
+  }, [user, loading])
 
   // Check for updates on mount
   useEffect(() => {
@@ -476,8 +496,17 @@ export default function App() {
     <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}>
       <div className="app-shell">
         <AnimatePresence>
-          {!hasAcceptedTerms && !isAuthPage && (
-            <TermsModal onAccept={() => setHasAcceptedTerms(true)} />
+          {!loading && ((!user && !sessionAcceptedTerms) || (user && !hasAcceptedTerms)) && !isAuthPage && (
+            <TermsModal 
+              onAccept={() => {
+                if (user) {
+                  setHasAcceptedTerms(true)
+                } else {
+                  setSessionAcceptedTerms(true)
+                  localStorage.setItem('gcassist_guest_accepted', 'true')
+                }
+              }} 
+            />
           )}
           {showTermsModal && (
             <TermsModal viewOnly onClose={() => setShowTermsModal(false)} />

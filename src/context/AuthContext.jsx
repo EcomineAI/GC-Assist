@@ -105,6 +105,7 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     user,
+    loading,
     signUp,
     signIn,
     signOut,
