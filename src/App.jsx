@@ -203,6 +203,30 @@ function AboutSheet({ isOpen, onClose, logoPath, onOpenTerms }) {
                   </div>
                 </div>
 
+                <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '10px' }}>Scan for Web Version</h4>
+                  <div style={{ 
+                    display: 'inline-block',
+                    padding: '12px',
+                    background: '#fff',
+                    borderRadius: '24px',
+                    border: '3px dashed var(--color-primary)',
+                    boxShadow: '0 8px 24px var(--color-primary-shadow)',
+                    transition: 'transform 0.3s ease'
+                  }}>
+                    <img 
+                      src="/qr.svg" 
+                      alt="Vercel Deployment QR" 
+                      style={{ 
+                        width: '130px', 
+                        height: '130px', 
+                        display: 'block',
+                        borderRadius: '12px'
+                      }} 
+                    />
+                  </div>
+                </div>
+
                 <div style={{ marginTop: '8px', textAlign: 'center' }}>
                   <button 
                     onClick={onOpenTerms}
