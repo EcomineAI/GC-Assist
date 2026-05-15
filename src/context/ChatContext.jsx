@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { useSettings } from './SettingsContext'
 import { pipeline } from '@xenova/transformers'
 import { encode } from 'gpt-tokenizer'
-import { fetchGroqChatCompletion } from '../services/groqApi'
+
 import { useAuth } from './AuthContext'
 
 const ChatContext = createContext()
@@ -194,7 +194,8 @@ export function ChatProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPhase, setLoadingPhase] = useState('searching')
   const [sessionTokens, setSessionTokens] = useState(0)
-  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'Groq API')
+  const [isConnected, setIsConnected] = useState(true)
+  const [activeProvider, setActiveProvider] = useState(() => localStorage.getItem('gcassist_active_provider') || 'LM Studio')
   const [activeModel, setActiveModel] = useState(() => localStorage.getItem('gcassist_active_model') || 'local-model')
   const [sessionsHistory, setSessionsHistory] = useState([])
   const [viewingHistoryId, setViewingHistoryId] = useState(null)
@@ -223,6 +224,7 @@ export function ChatProvider({ children }) {
 
   const kbSections = useRef([])
   const resolvedServerUrl = useRef(null)
+  const resolvedToken = useRef(null)
   const abortControllerRef = useRef(null)
   const embedderRef = useRef(null)
 
@@ -261,6 +263,9 @@ export function ChatProvider({ children }) {
           if (cfg.lmStudioUrl) {
             resolvedServerUrl.current = cfg.lmStudioUrl
             console.log(`[GC Assist] Cloud LM Studio Detected: ${cfg.lmStudioUrl}`)
+          }
+          if (cfg.lmStudioToken) {
+            resolvedToken.current = cfg.lmStudioToken
           }
         })
         .catch(() => {
@@ -336,12 +341,18 @@ export function ChatProvider({ children }) {
     return `${BASE_SYSTEM_PROMPT}\n\n--- RELEVANT KNOWLEDGE BASE SECTIONS ---\n${kbText}\n--- END ---`
   }, [])
 
-  const triggerBackgroundSummary = async (apiUrl, msgsToSummarize) => {
+  const triggerBackgroundSummary = async (msgsToSummarize) => {
     const transcript = msgsToSummarize.filter(m => m.role !== 'system').map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
     try {
+      const apiUrl = resolvedServerUrl.current || serverUrl
+      const apiToken = resolvedToken.current || import.meta.env.VITE_LM_STUDIO_TOKEN || ''
+
       const resp = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
         body: JSON.stringify({
           model: 'local-model',
           messages: [{ role: 'user', content: `Summarize the following conversation context briefly in exactly 3 precise sentences. Retain key facts, preferences, and important context details. DO NOT add conversational flair, just output the facts.\n\n${transcript}` }],
@@ -411,9 +422,6 @@ export function ChatProvider({ children }) {
       return
     }
 
-    let streamStarted = false
-    let aiMessageId = Date.now() + 1
-
     try {
       // Build conversation history — trim old turns if getting long
       const historyMsgs = [...messages, userMessage]
@@ -444,75 +452,55 @@ export function ChatProvider({ children }) {
       }
 
       const systemPrompt = buildSystemPrompt(relevant)
-      const apiUrl = resolvedServerUrl.current || serverUrl
+      let apiUrl = resolvedServerUrl.current || serverUrl
+      const apiToken = resolvedToken.current || import.meta.env.VITE_LM_STUDIO_TOKEN || ''
+
+      // Smart Detection: If we are on Vercel (not localhost) but the API is 127.0.0.1, it WILL fail.
+      const isLocalApi = apiUrl.includes('127.0.0.1') || apiUrl.includes('localhost')
+      const isRemoteHost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+      
+      if (isLocalApi && isRemoteHost && !resolvedServerUrl.current) {
+        console.warn('[GC Assist] Remote host detected attempting to use local AI URL. Connection will likely fail.')
+      }
 
       abortControllerRef.current = new AbortController()
 
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let response;
-      let currentProvider = isLocalhost ? 'LM Studio' : 'Groq API';
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
+        signal: abortControllerRef.current.signal,
+        body: JSON.stringify({
+          model: 'local-model',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...conversationHistory,
+          ],
+          temperature: temperature,
+          max_tokens: maxTokens,
+          stream: true,
+        }),
+      })
 
-      if (isLocalhost) {
-        // Localhost preference: use LM Studio directly
-        setActiveModel('local-model')
-        response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: abortControllerRef.current.signal,
-          body: JSON.stringify({
-            model: 'local-model',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              ...conversationHistory,
-            ],
-            temperature: temperature,
-            max_tokens: maxTokens,
-            stream: true,
-          }),
-        })
-        if (!response.ok) throw new Error(`LM Studio HTTP ${response.status}`)
-      } else {
-        // Production preference: try Groq first, fallback to LM Studio
-        try {
-          const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-          response = groqResult.response
-          setActiveModel(groqResult.modelUsed)
-        } catch (groqError) {
-          if (groqError.name === 'AbortError') throw groqError;
-
-          console.warn('[GC Assist] Groq API failed, falling back to Local LM Studio...', groqError)
-          currentProvider = 'LM Studio'
-          setActiveModel('local-model')
-
-          response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: abortControllerRef.current.signal,
-            body: JSON.stringify({
-              model: 'local-model',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                ...conversationHistory,
-              ],
-              temperature: temperature,
-              max_tokens: maxTokens,
-              stream: true,
-            }),
-          })
-
-          if (!response.ok) throw new Error(`LM Studio Fallback HTTP ${response.status}`)
-        }
+      if (!response.ok) {
+        setIsConnected(false)
+        throw new Error(`LM Studio HTTP ${response.status}`)
       }
 
-      console.log(`[GC Assist] Sending request to ${currentProvider} (${activeModel}) with ${countTokens(systemPrompt)} tokens of context.`);
-      setActiveProvider(currentProvider)
+      setIsConnected(true)
+      console.log(`[GC Assist] Sending request to LM Studio (local-model) with ${countTokens(systemPrompt)} tokens of context.`);
+      const currentProvider = 'LM Studio'
+      setActiveModel('local-model')
 
       // ─── Streaming Response Processing ───
       let finalContent = ''
       const reader = response.body.getReader()
       const decoder = new TextDecoder('utf-8')
       let tokensAccumulated = countTokens(systemPrompt) + countTokens(text)
-      aiMessageId = Date.now() + 1
+      let streamStarted = false
+      const aiMessageId = Date.now() + 1
 
       // Stream chunks — placeholder is NOT added until first real token arrives
       while (true) {
@@ -571,7 +559,7 @@ export function ChatProvider({ children }) {
         const mFilter = messages.filter(m => m.role !== 'system')
         if (mFilter.length > 4) {
           const half = Math.floor(mFilter.length / 2)
-          triggerBackgroundSummary(apiUrl, mFilter.slice(0, half))
+          triggerBackgroundSummary(mFilter.slice(0, half))
         }
       }
 
@@ -595,9 +583,10 @@ export function ChatProvider({ children }) {
           }])
         }
       } else {
+        setIsConnected(false)
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: 'Something went wrong. Please try again.',
+          content: 'Server is not connected. Please ensure LM Studio is running and the tunnel is active.',
           thinking: null,
           sources: [],
           tokensUsed: 0,
@@ -684,6 +673,7 @@ export function ChatProvider({ children }) {
       viewHistory,
       resumeCurrentSession,
       stopGeneration,
+      isConnected,
     }}>
       {children}
     </ChatContext.Provider>

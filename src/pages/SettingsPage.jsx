@@ -216,7 +216,7 @@ export default function SettingsPage() {
         <div className="settings-group">
           <div className="settings-row" style={{ cursor: 'default' }}>
             <div className="settings-row-left">
-              <div className="settings-row-label">GC Assist v1.41.1</div>
+              <div className="settings-row-label">GC Assist v1.5.0</div>
             </div>
           </div>
           <div className="settings-row" onClick={() => setShowAuthorInfo(true)} style={{ cursor: 'pointer' }} title="Learn more about the developer">
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                 <div className="settings-row-left">
                   <div className="settings-row-label">Language Model</div>
                   <div className="settings-row-sublabel">
-                    {activeProvider === 'Groq API' ? `(${activeModel})` : '(Local)'}
+                    (Local)
                   </div>
                 </div>
               </div>

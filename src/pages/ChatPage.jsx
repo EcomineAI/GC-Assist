@@ -488,7 +488,7 @@ export default function ChatPage() {
     messages, isLoading, loadingPhase, activeProvider, activeModel,
     sessionTokens, maxSessionTokens, tokenPct, tokenWarning, tokenBlocked,
     sessionsHistory, viewingHistoryId, kbTimestamp,
-    sendMessage, setFeedback, startNewSession, viewHistory, resumeCurrentSession, stopGeneration
+    sendMessage, setFeedback, startNewSession, viewHistory, resumeCurrentSession, stopGeneration, isConnected
   } = useChat()
 
   const { showAdvanced } = useSettings()
@@ -575,11 +575,17 @@ export default function ChatPage() {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="top-bar-title">GC Assist</span>
             <div className="top-bar-info-row" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--color-text-secondary)', fontWeight: 500, opacity: 0.8 }}>
-              <span className="version-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '1px 5px', borderRadius: '4px', scale: '0.9', transformOrigin: 'left' }}>v1.41.1</span>
+              <span className="version-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', padding: '1px 5px', borderRadius: '4px', scale: '0.9', transformOrigin: 'left' }}>v1.5.0</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }} title="Knowledge Base last updated">
                 <Clock size={10} />
                 {(kbTimestamp || currentTime).toLocaleDateString([], { month: 'short', day: 'numeric' })} • {(kbTimestamp || currentTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
+              {!isConnected && (
+                <span className="status-pill disconnected" style={{ background: '#fee2e2', color: '#ef4444', padding: '1px 5px', borderRadius: '4px', scale: '0.9', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <AlertTriangle size={10} />
+                  Server is not connected
+                </span>
+              )}
             </div>
           </div>
         </div>

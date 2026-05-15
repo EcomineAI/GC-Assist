@@ -12,7 +12,7 @@ Usage:
     4. Run: python ngrok_tunnel.py
 
 Leave this script running while you want remote users to use LM Studio.
-When LM Studio is offline, the app falls back to Groq automatically.
+When LM Studio is offline, the app will wait for it to come back online.
 """
 
 import json
@@ -59,12 +59,12 @@ def write_config(url):
 
 
 def clear_config():
-    """Remove config.json so app falls back to Groq after script exits."""
+    """Remove config.json after script exits."""
     if os.path.exists(CONFIG_FILE):
         cfg = {}
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(cfg, f)
-        print("[config] Cleared config.json — app will use Groq fallback.")
+        print("[config] Cleared config.json.")
 
 
 def main():
@@ -110,7 +110,7 @@ def main():
     print(f"  LM Studio → {public_url}")
     print()
     print("  Your Vercel app will now use YOUR LM Studio.")
-    print("  Press Ctrl+C to stop and fall back to Groq.")
+    print("  Press Ctrl+C to stop.")
     print("  " + "=" * 50)
     print()
 
@@ -125,7 +125,7 @@ def main():
         ngrok.disconnect(tunnel.public_url)
         ngrok.kill()
         clear_config()
-        print("[ngrok] Done. App will now use Groq API as fallback.")
+        print("[ngrok] Done.")
         sys.exit(0)
 
 

@@ -2,6 +2,18 @@
 
 All notable changes to the **GC Assist** project will be documented in this file.
 
+## [v1.5.0] - 2026-05-15
+
+### Added
+- **LM Studio API Security:** Integrated `VITE_LM_STUDIO_TOKEN` authentication for all AI requests. The system now sends a secure `Authorization: Bearer` header, ensuring only authorized clients can access the local model.
+- **Server Connectivity Monitoring:** Implemented a real-time `isConnected` state. The UI now displays a "Server is not connected" status pill and error messages if the local AI server or tunnel becomes unreachable.
+- **Vercel-Ready Manual Configuration:** Enhanced `SettingsContext` and `ChatContext` to support a manual `VITE_LM_STUDIO_URL` environment variable, enabling seamless production deployment on Vercel while talking to a local computer via tunnel.
+- **Smart Host Detection:** Added logic to detect and warn when a remote-hosted app (Vercel) is incorrectly trying to connect to a local IP address without a tunnel.
+
+### Fixed & Improved
+- **Tunnel Logic Optimization:** Updated `cloud.py` to use `127.0.0.1` for better reliability on Windows and automated the extraction of the LM Studio token from `.env` into the `config.json` delivery system.
+- **Consolidated Secrets:** Moved all critical configuration (URLs and Tokens) into a single `.env` source of truth.
+
 ## [v1.41.1] - 2026-05-04
 
 ### Fixed & Improved
@@ -34,7 +46,7 @@ All notable changes to the **GC Assist** project will be documented in this file
 - **Refined Bottom Nav:** Reduced the height of the bottom navigation bar to 56px to reclaim vertical screen space.
 - **Advanced Control Relocation:** Moved technical settings like AI Temperature and detailed model identifiers into the new Advanced section.
 
-- **High-Concurrency Support:** Implemented a "Smart Retry" mechanism for the Groq API. The app now detects rate limits (429) and automatically retries requests with a randomized delay to handle multiple students chatting at once.
+- **High-Concurrency Support:** Implemented a "Smart Retry" mechanism for the local LM Studio API. The app now detects rate limits and automatically retries requests with a randomized delay to handle multiple students chatting at once.
 - **Dynamic Load Balancing:** Expanded the AI model pool to include Llama 3.3, Llama 3.1, Mixtral, and Gemma. The system now automatically rotates between these models if one becomes congested or hit by limits.
 - **SPA Routing Fix:** Added `vercel.json` to ensure smooth navigation and prevent "404 Not Found" errors when refreshing the page on Vercel.
 - **Onboarding Polish:** The Terms & Conditions modal is now suppressed on Login, Signup, and Password Reset pages to provide a friction-less entry for new users.
@@ -68,7 +80,7 @@ All notable changes to the **GC Assist** project will be documented in this file
 ## [v1.2.0] - 2026-04-30
 
 ### Added
-- **Multi-Provider AI Fallback:** Automatic rotation between local LM Studio and Groq API models to ensure 100% availability.
+- **LM Studio Integration:** Exclusively using local LM Studio for AI processing to ensure data privacy and campus-local execution.
 - **Advanced TTS Engine:** Custom controls for Voice Speed and Pitch with persistent settings.
 - **Theme Color Engine:** New Green (GC Branding) and Blue themes for Light Mode, including subtle background tints and immersive surface coloring.
 - **Dynamic Branding:** Auto-swapping logos (Green/Blue/Default) based on the active color theme.

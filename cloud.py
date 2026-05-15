@@ -166,8 +166,19 @@ def tunnel_worker(label, port, url_key):
 
 def write_config(lm_url):
     """Write config.json into dist/ so the browser app can read it."""
+    # Try to load token from .env file manually to avoid extra dependencies
+    token = ""
+    env_path = os.path.join(PROJECT_DIR, ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("VITE_LM_STUDIO_TOKEN="):
+                    token = line.split("=", 1)[1].strip()
+                    break
+
     cfg = {
-        "lmStudioUrl": f"{lm_url}/v1/chat/completions"
+        "lmStudioUrl": f"{lm_url}/v1/chat/completions",
+        "lmStudioToken": token
     }
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)

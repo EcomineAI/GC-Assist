@@ -177,7 +177,7 @@ function AboutSheet({ isOpen, onClose, logoPath, onOpenTerms }) {
             <div className="sheet-body" style={{ paddingBottom: '20px' }}>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <img src={logoPath} alt="GC Assist" style={{ width: '80px', height: '80px', margin: '0 auto 12px' }} />
-                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.41.1</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text)' }}>GC Assist v1.5.0</h3>
                 <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>Olongapo City's AI Campus Companion</p>
               </div>
 
@@ -297,7 +297,7 @@ function UpdatePopup({ isOpen, onClose }) {
               <div style={{ width: '60px', height: '60px', background: 'var(--color-primary-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--color-primary)' }}>
                 <Rocket size={32} />
               </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>v1.41.1 Update</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>v1.5.0 Update</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
                 We've automated the campus knowledge base! The AI now refreshes every 12 hours with the latest GC news, events, and academic updates.
               </p>
@@ -456,9 +456,7 @@ export default function App() {
     }
   }, [])
 
-  const isGroq = activeProvider === 'Groq API'
-  const badgeLabel = isGroq ? `(${activeModel})` : '(Local)'
-  const badgeClass = `sidebar-footer-badge${isGroq ? ' sidebar-footer-badge--groq' : ''}`
+
 
   const getLogo = () => {
     if (isDark) return '/logo.png'
@@ -626,9 +624,9 @@ export default function App() {
 
           <div className="sidebar-footer">
             <div>Gordon College, Olongapo City</div>
-            <div className={badgeClass}>
+            <div className="sidebar-footer-badge">
               <Zap style={{ width: 12, height: 12 }} />
-              {badgeLabel}
+              (Local)
             </div>
           </div>
         </aside>
