@@ -122,6 +122,10 @@ async function findRelevantSections(sections, query, embedder) {
         let score = 0
         if (s.vector) {
           for (let i = 0; i < queryVector.length; i++) score += queryVector[i] * s.vector[i]
+        } else {
+          // Fallback to keyword scoring if this specific section has no vector (e.g. legacy .txt)
+          // We divide by a constant to bring it into a comparable range with vector cosine similarity
+          score = scoreByKeywords(s, query) / 50 
         }
         return { ...s, score }
       })
