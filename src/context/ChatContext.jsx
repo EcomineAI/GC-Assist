@@ -448,20 +448,13 @@ export function ChatProvider({ children }) {
 
       abortControllerRef.current = new AbortController()
 
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       let response;
-      let currentProvider = 'Groq API';
+      let currentProvider = isLocalhost ? 'LM Studio' : 'Groq API';
 
-      try {
-        const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
-        response = groqResult.response
-        setActiveModel(groqResult.modelUsed)
-      } catch (groqError) {
-        if (groqError.name === 'AbortError') throw groqError;
-
-        console.warn('[GC Assist] Groq API failed, falling back to Local LM Studio...', groqError)
-        currentProvider = 'LM Studio'
+      if (isLocalhost) {
+        // Localhost preference: use LM Studio directly
         setActiveModel('local-model')
-
         response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -477,8 +470,38 @@ export function ChatProvider({ children }) {
             stream: true,
           }),
         })
+        if (!response.ok) throw new Error(`LM Studio HTTP ${response.status}`)
+      } else {
+        // Production preference: try Groq first, fallback to LM Studio
+        try {
+          const groqResult = await fetchGroqChatCompletion(systemPrompt, conversationHistory, abortControllerRef.current.signal, temperature, maxTokens)
+          response = groqResult.response
+          setActiveModel(groqResult.modelUsed)
+        } catch (groqError) {
+          if (groqError.name === 'AbortError') throw groqError;
 
-        if (!response.ok) throw new Error(`LM Studio Fallback HTTP ${response.status}`)
+          console.warn('[GC Assist] Groq API failed, falling back to Local LM Studio...', groqError)
+          currentProvider = 'LM Studio'
+          setActiveModel('local-model')
+
+          response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: abortControllerRef.current.signal,
+            body: JSON.stringify({
+              model: 'local-model',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...conversationHistory,
+              ],
+              temperature: temperature,
+              max_tokens: maxTokens,
+              stream: true,
+            }),
+          })
+
+          if (!response.ok) throw new Error(`LM Studio Fallback HTTP ${response.status}`)
+        }
       }
 
       console.log(`[GC Assist] Sending request to ${currentProvider} (${activeModel}) with ${countTokens(systemPrompt)} tokens of context.`);
