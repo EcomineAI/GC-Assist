@@ -411,6 +411,9 @@ export function ChatProvider({ children }) {
       return
     }
 
+    let streamStarted = false
+    let aiMessageId = Date.now() + 1
+
     try {
       // Build conversation history — trim old turns if getting long
       const historyMsgs = [...messages, userMessage]
@@ -486,8 +489,7 @@ export function ChatProvider({ children }) {
       const reader = response.body.getReader()
       const decoder = new TextDecoder('utf-8')
       let tokensAccumulated = countTokens(systemPrompt) + countTokens(text)
-      let streamStarted = false
-      const aiMessageId = Date.now() + 1
+      aiMessageId = Date.now() + 1
 
       // Stream chunks — placeholder is NOT added until first real token arrives
       while (true) {

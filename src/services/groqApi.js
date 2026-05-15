@@ -1,4 +1,4 @@
-const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'groq/compound-mini').split(',');
+const GROQ_MODELS = (import.meta.env.VITE_GROQ_MODELS ?? 'compound-beta-mini').split(',');
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
