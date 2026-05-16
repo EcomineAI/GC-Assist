@@ -4,6 +4,7 @@ import { pipeline } from '@xenova/transformers'
 import { encode } from 'gpt-tokenizer'
 
 import { useAuth } from './AuthContext'
+import { supabase } from '../lib/supabase'
 
 const ChatContext = createContext()
 
@@ -252,37 +253,48 @@ export function ChatProvider({ children }) {
     return () => { active = false }
   }, [])
 
-  // Load cloud config (written by cloud.py) with retry logic
+  // Load tunnel URL from Supabase (pushed by tunnel_bridge.py) with realtime updates
   useEffect(() => {
-    let retries = 0
-    const maxRetries = 5
+    // Initial fetch from Supabase tunnel_config table
+    supabase
+      .from('tunnel_config')
+      .select('lm_studio_url, lm_studio_token')
+      .eq('id', 1)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data?.lm_studio_url) {
+          resolvedServerUrl.current = data.lm_studio_url
+          if (data.lm_studio_token) resolvedToken.current = data.lm_studio_token
+          console.log(`[GC Assist] Tunnel URL loaded from Supabase: ${data.lm_studio_url}`)
+        } else {
+          console.log('[GC Assist] No active tunnel in Supabase — using local/default URL')
+        }
+      })
 
-    const loadConfig = () => {
-      fetch('/config.json?t=' + new Date().getTime())
-        .then(res => {
-          if (!res.ok) throw new Error('Not found')
-          return res.json()
-        })
-        .then(cfg => {
-          if (cfg.lmStudioUrl) {
-            resolvedServerUrl.current = cfg.lmStudioUrl
-            console.log(`[GC Assist] Cloud LM Studio Detected: ${cfg.lmStudioUrl}`)
-          }
-          if (cfg.lmStudioToken) {
-            resolvedToken.current = cfg.lmStudioToken
-          }
-        })
-        .catch(() => {
-          if (retries < maxRetries) {
-            retries++
-            console.log(`[GC Assist] Config not ready, retrying... (${retries}/${maxRetries})`)
-            setTimeout(loadConfig, 2000)
+    // Realtime subscription: fires instantly when tunnel_bridge.py upserts or clears
+    const channel = supabase
+      .channel('tunnel_config_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tunnel_config', filter: 'id=eq.1' },
+        (payload) => {
+          const newUrl = payload.new?.lm_studio_url
+          const newToken = payload.new?.lm_studio_token
+          if (newUrl) {
+            resolvedServerUrl.current = newUrl
+            if (newToken) resolvedToken.current = newToken
+            setIsConnected(true)
+            console.log(`[GC Assist] Tunnel URL updated via realtime: ${newUrl}`)
           } else {
-            console.log('[GC Assist] Running in Local Mode (No config.json found after retries)')
+            // Row deleted — tunnel went offline
+            resolvedServerUrl.current = null
+            console.log('[GC Assist] Tunnel offline, falling back to default URL')
           }
-        })
-    }
-    loadConfig()
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   // Load knowledge base & metadata
